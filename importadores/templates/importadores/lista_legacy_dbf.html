@@ -1,0 +1,37 @@
+{% extends "core/base_panel.html" %}
+
+{% block title %}DBF legacy{% endblock %}
+
+{% block content %}
+<h1>Archivos DBF Legacy</h1>
+
+<p class="muted">Carpeta: {{ base_dir }}</p>
+<p class="muted">Total DBF encontrados: {{ total }}</p>
+
+{% if archivos %}
+<table>
+    <thead>
+        <tr>
+            <th>Archivo</th>
+            <th>Ruta</th>
+            <th>Tamano</th>
+            <th>Accion</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for archivo in archivos %}
+        <tr>
+            <td>{{ archivo.nombre }}</td>
+            <td>{{ archivo.ruta }}</td>
+            <td>{{ archivo.tamano }} bytes</td>
+            <td>
+                <a href="{% url 'importadores:detalle_legacy_dbf' %}?archivo={{ archivo.ruta|urlencode }}">Ver tabla</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<div class="sin-datos">No se encontraron archivos DBF en importslegacy.</div>
+{% endif %}
+{% endblock %}

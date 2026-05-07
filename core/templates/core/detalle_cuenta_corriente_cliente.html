@@ -1,0 +1,121 @@
+{% extends "core/base_panel.html" %}
+
+{% block title %}Cuenta corriente - {{ cliente.nombre }}{% endblock %}
+
+{% block content %}
+<h1>Cuenta corriente de {{ cliente.nombre }}</h1>
+
+<div class="acciones">
+    <a href="{% url 'cuenta_corriente_clientes' %}" class="secundario">Volver al resumen</a>
+    <a href="{% url 'editar_cliente' cliente.id %}" class="secundario">Editar cliente</a>
+</div>
+
+<div class="resumen-total">
+    <div>
+        <span class="muted">Total facturado</span>
+        <strong>${{ total_facturado|miles_punto }}</strong>
+    </div>
+    <div>
+        <span class="muted">Total cobrado</span>
+        <strong>${{ total_cobrado|miles_punto }}</strong>
+    </div>
+    <div>
+        <span class="muted">Total pendiente</span>
+        <strong>${{ total_pendiente|miles_punto }}</strong>
+    </div>
+    <div>
+        <span class="muted">Fletes del periodo</span>
+        <strong>{{ fletes|length }}</strong>
+    </div>
+    <div>
+        <span class="muted">Viajes pendientes</span>
+        <strong>{{ pendientes_periodo_count }}</strong>
+    </div>
+</div>
+
+{% if pendientes_periodo_count %}
+    <div class="acciones">
+        <form method="post" action="{% url 'cerrar_cobranza_cliente' cliente.id %}" onsubmit="return confirm('Se marcaran como cobrados {{ pendientes_periodo_count }} viajes por un total de ${{ total_pendiente_periodo|miles_punto }}.');">
+            {% csrf_token %}
+            <input type="hidden" name="fecha_desde" value="{{ filtros.fecha_desde }}">
+            <input type="hidden" name="fecha_hasta" value="{{ filtros.fecha_hasta }}">
+            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+            <button type="submit" class="btn-exito">Cerrar cobranza</button>
+        </form>
+    </div>
+{% else %}
+    <div class="sin-datos">Sin viajes pendientes en este periodo.</div>
+{% endif %}
+
+<form method="get" class="filtros">
+    <div class="filtros-campo">
+        <label>Desde</label>
+        <input type="date" name="fecha_desde" value="{{ filtros.fecha_desde }}">
+    </div>
+    <div class="filtros-campo">
+        <label>Hasta</label>
+        <input type="date" name="fecha_hasta" value="{{ filtros.fecha_hasta }}">
+    </div>
+    <div class="filtros-campo">
+        <label>Estado de cobro</label>
+        <select name="estado_cobro" onchange="this.form.requestSubmit ? this.form.requestSubmit() : this.form.submit()">
+            <option value="">Todos</option>
+            {% for value, label in estados_cobro %}
+                <option value="{{ value }}" {% if filtros.estado_cobro == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="filtros-acciones">
+        <button type="submit">Filtrar</button>
+        <a href="{% url 'detalle_cuenta_corriente_cliente' cliente.id %}" class="btn-secundario">Limpiar</a>
+    </div>
+</form>
+
+{% if fletes %}
+<table>
+    <thead>
+        <tr>
+            <th>Fecha</th>
+            <th>Chofer</th>
+            <th>Origen</th>
+            <th>Destino</th>
+            <th>Importe</th>
+            <th>Estado de pago</th>
+            <th>Fecha de cobro</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for flete in fletes %}
+        <tr>
+            <td>{{ flete.fecha }}</td>
+            <td>{{ flete.chofer.nombre }}</td>
+            <td>{{ flete.direccion_origen }}</td>
+            <td>{{ flete.direccion_destino }}</td>
+            <td>${{ flete.precio|miles_punto }}</td>
+            <td><span class="estado {{ flete.estado_cobro_cliente }}">{{ flete.get_estado_cobro_cliente_display }}</span></td>
+            <td>{{ flete.fecha_cobro_cliente|date:"d/m/Y H:i"|default:"-" }}</td>
+            <td class="acciones-tabla">
+                <a href="{% url 'editar_flete' flete.id %}">Ver/editar</a>
+                {% if flete.estado_cobro_cliente == "cobrado" %}
+                    <form method="post" action="{% url 'marcar_cobro_pendiente' flete.id %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                        <button type="submit">Marcar pendiente</button>
+                    </form>
+                {% elif flete.forma_de_pago == "cuenta_corriente" %}
+                    <form method="post" action="{% url 'marcar_cobro_pagado' flete.id %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                        <button type="submit" class="btn-exito">Marcar cobrado</button>
+                    </form>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<div class="sin-datos">No hay movimientos para este cliente con los filtros elegidos.</div>
+{% endif %}
+{% endblock %}

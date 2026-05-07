@@ -1,0 +1,31 @@
+from django.urls import path
+from . import views
+
+urlpatterns = [
+    path("", views.panel_inicio, name="panel_inicio"),
+    path("reportes/", views.reportes, name="reportes"),
+    path("fletes/", views.lista_fletes, name="lista_fletes"),
+    path("clientes/", views.lista_clientes, name="lista_clientes"),
+    path("clientes/cuenta-corriente/", views.cuenta_corriente_clientes, name="cuenta_corriente_clientes"),
+    path("clientes/nuevo/", views.crear_cliente, name="crear_cliente"),
+    path("clientes/<int:cliente_id>/cuenta-corriente/", views.detalle_cuenta_corriente_cliente, name="detalle_cuenta_corriente_cliente"),
+    path("clientes/<int:cliente_id>/cuenta-corriente/cerrar/", views.cerrar_cobranza_cliente, name="cerrar_cobranza_cliente"),
+    path("clientes/<int:cliente_id>/editar/", views.editar_cliente, name="editar_cliente"),
+    path("choferes/", views.lista_choferes, name="lista_choferes"),
+    path("choferes/liquidacion/", views.liquidacion_choferes, name="liquidacion_choferes"),
+    path("choferes/nuevo/", views.crear_chofer, name="crear_chofer"),
+    path("choferes/<int:chofer_id>/liquidacion/", views.detalle_liquidacion_chofer, name="detalle_liquidacion_chofer"),
+    path("choferes/<int:chofer_id>/liquidacion/cerrar/", views.cerrar_liquidacion_chofer, name="cerrar_liquidacion_chofer"),
+    path("choferes/<int:chofer_id>/editar/", views.editar_chofer, name="editar_chofer"),
+    path("fletes/nuevo/", views.crear_flete, name="crear_flete"),
+    path("fletes/<int:flete_id>/editar/", views.editar_flete, name="editar_flete"),
+    path("fletes/<int:flete_id>/finalizar/", views.finalizar_flete, name="finalizar_flete"),
+    path("fletes/<int:flete_id>/estado/<str:estado>/", views.cambiar_estado_flete, name="cambiar_estado_flete"),
+    path("facturacion/", views.facturacion, name="facturacion"),
+    path("facturacion/<int:flete_id>/marcar-pagado/", views.marcar_cobro_pagado, name="marcar_cobro_pagado"),
+    path("facturacion/<int:flete_id>/marcar-pendiente/", views.marcar_cobro_pendiente, name="marcar_cobro_pendiente"),
+    path("liquidacion-choferes/<int:flete_id>/marcar-pagado/", views.marcar_pago_chofer_pagado, name="marcar_pago_chofer_pagado"),
+    path("liquidacion-choferes/<int:flete_id>/marcar-pendiente/", views.marcar_pago_chofer_pendiente, name="marcar_pago_chofer_pendiente"),
+    path("viajes/", views.lista_viajes, name="lista_viajes"),
+    path("facturas/", views.lista_facturas, name="lista_facturas"),
+]

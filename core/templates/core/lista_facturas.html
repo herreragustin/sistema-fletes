@@ -1,0 +1,74 @@
+{% extends "core/base_panel.html" %}
+
+{% block title %}Facturas historicas{% endblock %}
+
+{% block content %}
+<h1>Listado de Facturas Historicas</h1>
+
+<form method="get" class="filtros">
+    <div>
+        <label>Fecha</label>
+        <input type="date" name="fecha" value="{{ filtros.fecha }}">
+    </div>
+    <div>
+        <label>Estado</label>
+        <select name="estado">
+            <option value="">Todos</option>
+            {% for value, label in estados %}
+                <option value="{{ value }}" {% if filtros.estado == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div>
+        <label>Cliente</label>
+        <select name="cliente">
+            <option value="">Todos</option>
+            {% for c in clientes %}
+                <option value="{{ c.id }}" {% if filtros.cliente == c.id|stringformat:"s" %}selected{% endif %}>{{ c.nombre }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div>
+        <label>Chofer</label>
+        <select name="chofer">
+            <option value="">Todos</option>
+            {% for ch in choferes %}
+                <option value="{{ ch.id }}" {% if filtros.chofer == ch.id|stringformat:"s" %}selected{% endif %}>{{ ch.nombre }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <button type="submit">Filtrar</button>
+    <a href="{% url 'lista_facturas' %}" class="muted">Limpiar</a>
+</form>
+
+{% if facturas %}
+<table>
+    <thead>
+        <tr>
+            <th>Numero</th>
+            <th>Fecha</th>
+            <th>Cliente</th>
+            <th>Viaje</th>
+            <th>Importe</th>
+            <th>Estado</th>
+            <th>Codigo legacy</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for factura in facturas %}
+        <tr>
+            <td>{{ factura.numero }}</td>
+            <td>{{ factura.fecha|default:"-" }}</td>
+            <td>{{ factura.cliente.nombre|default:factura.cliente_codigo_legacy|default:"Sin relacion" }}</td>
+            <td>{{ factura.viaje.codigo_legacy|default:factura.viaje_codigo_legacy|default:"Sin relacion" }}</td>
+                    <td>${{ factura.importe_total|miles_punto }}</td>
+            <td><span class="estado {{ factura.estado }}">{{ factura.get_estado_display }}</span></td>
+            <td>{{ factura.codigo_legacy }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<div class="sin-datos">No hay facturas historicas cargadas.</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,17 @@
+{% extends "core/base_panel.html" %}
+
+{% block title %}{{ titulo }}{% endblock %}
+
+{% block content %}
+<h1>{{ titulo }}</h1>
+
+<form method="post" class="formulario-principal">
+    {% csrf_token %}
+    {{ form.as_p }}
+
+    <div class="acciones">
+        <button type="submit">{{ texto_boton }}</button>
+        <a href="{% url 'lista_fletes' %}" class="secundario">Volver</a>
+    </div>
+</form>
+{% endblock %}

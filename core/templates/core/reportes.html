@@ -1,0 +1,74 @@
+{% extends "core/base_panel.html" %}
+
+{% block title %}Reportes{% endblock %}
+
+{% block content %}
+<h1>Reportes por periodo</h1>
+
+<form method="get" class="filtros">
+    <div class="filtros-campo">
+        <label>Fecha desde</label>
+        <input type="date" name="fecha_desde" value="{{ filtros.fecha_desde }}">
+    </div>
+    <div class="filtros-campo">
+        <label>Fecha hasta</label>
+        <input type="date" name="fecha_hasta" value="{{ filtros.fecha_hasta }}">
+    </div>
+    <div class="filtros-acciones">
+        <button type="submit">Filtrar</button>
+        <a href="{% url 'reportes' %}" class="btn-secundario">Limpiar</a>
+    </div>
+</form>
+
+<div class="dashboard-grid">
+    <section class="dashboard-bloque">
+        <h2>Clientes</h2>
+        <div class="resumen-total">
+            <div>
+                <span class="muted">Total facturado</span>
+                <strong>${{ total_facturado|miles_punto }}</strong>
+            </div>
+            <div>
+                <span class="muted">Total cobrado</span>
+                <strong>${{ total_cobrado|miles_punto }}</strong>
+            </div>
+            <div>
+                <span class="muted">Pendiente de cobro</span>
+                <strong>${{ total_pendiente_cobro|miles_punto }}</strong>
+            </div>
+        </div>
+    </section>
+
+    <section class="dashboard-bloque">
+        <h2>Choferes</h2>
+        <div class="resumen-total">
+            <div>
+                <span class="muted">Total a pagar</span>
+                <strong>${{ total_a_pagar_choferes|miles_punto }}</strong>
+            </div>
+            <div>
+                <span class="muted">Total ya pagado</span>
+                <strong>${{ total_pagado_choferes|miles_punto }}</strong>
+            </div>
+            <div>
+                <span class="muted">Pendiente de pago</span>
+                <strong>${{ total_pendiente_pago_choferes|miles_punto }}</strong>
+            </div>
+        </div>
+    </section>
+
+    <section class="dashboard-bloque">
+        <h2>General</h2>
+        <div class="resumen-total">
+            <div>
+                <span class="muted">Resultado estimado</span>
+                <strong>${{ resultado_estimado|miles_punto }}</strong>
+            </div>
+        </div>
+        <p class="muted">
+            El resultado estimado surge de restar al total cobrado a clientes el total a pagar a choferes dentro del periodo filtrado.
+        </p>
+    </section>
+</div>
+
+{% endblock %}

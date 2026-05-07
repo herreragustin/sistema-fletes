@@ -1,0 +1,76 @@
+{% extends "core/base_panel.html" %}
+
+{% block title %}Viajes historicos{% endblock %}
+
+{% block content %}
+<h1>Listado de Viajes Historicos</h1>
+
+<form method="get" class="filtros">
+    <div>
+        <label>Fecha</label>
+        <input type="date" name="fecha" value="{{ filtros.fecha }}">
+    </div>
+    <div>
+        <label>Estado</label>
+        <select name="estado">
+            <option value="">Todos</option>
+            {% for value, label in estados %}
+                <option value="{{ value }}" {% if filtros.estado == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div>
+        <label>Cliente</label>
+        <select name="cliente">
+            <option value="">Todos</option>
+            {% for c in clientes %}
+                <option value="{{ c.id }}" {% if filtros.cliente == c.id|stringformat:"s" %}selected{% endif %}>{{ c.nombre }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div>
+        <label>Chofer</label>
+        <select name="chofer">
+            <option value="">Todos</option>
+            {% for ch in choferes %}
+                <option value="{{ ch.id }}" {% if filtros.chofer == ch.id|stringformat:"s" %}selected{% endif %}>{{ ch.nombre }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <button type="submit">Filtrar</button>
+    <a href="{% url 'lista_viajes' %}" class="muted">Limpiar</a>
+</form>
+
+{% if viajes %}
+<table>
+    <thead>
+        <tr>
+            <th>Codigo legacy</th>
+            <th>Fecha</th>
+            <th>Cliente</th>
+            <th>Chofer</th>
+            <th>Origen</th>
+            <th>Destino</th>
+            <th>Importe</th>
+            <th>Estado</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for viaje in viajes %}
+        <tr>
+            <td>{{ viaje.codigo_legacy }}</td>
+            <td>{{ viaje.fecha|default:"-" }}</td>
+            <td>{{ viaje.cliente.nombre|default:viaje.cliente_codigo_legacy|default:"Sin relacion" }}</td>
+            <td>{{ viaje.chofer.nombre|default:viaje.chofer_codigo_legacy|default:"Sin relacion" }}</td>
+            <td>{{ viaje.origen|default:"-" }}</td>
+            <td>{{ viaje.destino|default:"-" }}</td>
+                    <td>${{ viaje.importe|miles_punto }}</td>
+            <td><span class="estado {{ viaje.estado }}">{{ viaje.get_estado_display }}</span></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<div class="sin-datos">No hay viajes historicos cargados.</div>
+{% endif %}
+{% endblock %}

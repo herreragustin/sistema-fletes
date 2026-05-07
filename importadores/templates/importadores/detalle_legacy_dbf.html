@@ -1,0 +1,74 @@
+{% extends "core/base_panel.html" %}
+
+{% block title %}{{ archivo }}{% endblock %}
+
+{% block content %}
+<h1>{{ archivo }}</h1>
+
+<div class="acciones" style="margin-bottom:20px;">
+    <a href="{% url 'importadores:lista_legacy_dbf' %}" class="secundario">Volver</a>
+</div>
+
+{% if error %}
+<div class="sin-datos">{{ error }}</div>
+{% else %}
+<p class="muted">
+    Registros: {{ info.record_count }} |
+    Campos: {{ campos|length }} |
+    Pagina: {{ pagina }} |
+    Filas por pagina: {{ por_pagina }}
+</p>
+
+<form method="get" class="filtros">
+    <input type="hidden" name="archivo" value="{{ archivo }}">
+    <div>
+        <label>Pagina</label>
+        <input type="number" name="pagina" value="{{ pagina }}" min="1">
+    </div>
+    <div>
+        <label>Filas</label>
+        <select name="por_pagina">
+            <option value="25" {% if por_pagina == 25 %}selected{% endif %}>25</option>
+            <option value="50" {% if por_pagina == 50 %}selected{% endif %}>50</option>
+            <option value="100" {% if por_pagina == 100 %}selected{% endif %}>100</option>
+            <option value="200" {% if por_pagina == 200 %}selected{% endif %}>200</option>
+        </select>
+    </div>
+    <button type="submit">Ver</button>
+</form>
+
+{% if filas %}
+<table>
+    <thead>
+        <tr>
+            <th>#</th>
+            {% for campo in campos %}
+                <th>{{ campo }}</th>
+            {% endfor %}
+        </tr>
+    </thead>
+    <tbody>
+        {% for fila in filas %}
+        <tr>
+            <td>{{ fila.numero }}</td>
+            {% for valor in fila.valores %}
+                <td>{{ valor|default:"" }}</td>
+            {% endfor %}
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<div class="acciones" style="margin-top:20px;">
+    {% if pagina_anterior %}
+        <a href="{% url 'importadores:detalle_legacy_dbf' %}?archivo={{ archivo|urlencode }}&pagina={{ pagina_anterior }}&por_pagina={{ por_pagina }}" class="secundario">Anterior</a>
+    {% endif %}
+    {% if pagina_siguiente %}
+        <a href="{% url 'importadores:detalle_legacy_dbf' %}?archivo={{ archivo|urlencode }}&pagina={{ pagina_siguiente }}&por_pagina={{ por_pagina }}" class="secundario">Siguiente</a>
+    {% endif %}
+</div>
+{% else %}
+<div class="sin-datos">No hay filas para mostrar en esta pagina.</div>
+{% endif %}
+{% endif %}
+{% endblock %}

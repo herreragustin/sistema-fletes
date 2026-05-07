@@ -1,0 +1,74 @@
+{% extends "core/base_panel.html" %}
+
+{% block title %}Clientes{% endblock %}
+
+{% block content %}
+<h1>Listado de Clientes</h1>
+
+<div class="acciones">
+    <a href="{% url 'crear_cliente' %}">Nuevo cliente</a>
+    <a href="{% url 'cuenta_corriente_clientes' %}" class="secundario">Cuenta corriente</a>
+</div>
+
+<form method="get" class="filtros">
+    <div>
+        <label>Estado</label>
+        <select name="estado">
+            <option value="">Todos</option>
+            <option value="activo" {% if filtros.estado == "activo" %}selected{% endif %}>Activo</option>
+            <option value="inactivo" {% if filtros.estado == "inactivo" %}selected{% endif %}>Inactivo</option>
+        </select>
+    </div>
+    <div>
+        <label>Cliente</label>
+        <select name="cliente">
+            <option value="">Todos</option>
+            {% for c in clientes_filtro %}
+                <option value="{{ c.id }}" {% if filtros.cliente == c.id|stringformat:"s" %}selected{% endif %}>{{ c.nombre }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <button type="submit">Filtrar</button>
+    <a href="{% url 'lista_clientes' %}" class="muted">Limpiar</a>
+</form>
+
+{% if clientes %}
+<table>
+    <thead>
+        <tr>
+            <th>Nombre</th>
+            <th>Telefono</th>
+            <th>Direccion</th>
+            <th>Estado</th>
+            <th>Codigo legacy</th>
+            <th>Origen</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for cliente in clientes %}
+        <tr>
+            <td>{{ cliente.nombre }}</td>
+            <td>{{ cliente.telefono|default:"-" }}</td>
+            <td>{{ cliente.direccion|default:"-" }}</td>
+            <td>
+                {% if cliente.activo %}
+                    <span class="estado activo">Activo</span>
+                {% else %}
+                    <span class="estado inactivo">Inactivo</span>
+                {% endif %}
+            </td>
+            <td>{{ cliente.codigo_legacy|default:"-" }}</td>
+            <td>{{ cliente.origen_legacy|default:"-" }}</td>
+            <td class="acciones-tabla">
+                <a href="{% url 'detalle_cuenta_corriente_cliente' cliente.id %}">Cuenta corriente</a>
+                <a href="{% url 'editar_cliente' cliente.id %}">Editar</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<div class="sin-datos">No hay clientes cargados.</div>
+{% endif %}
+{% endblock %}

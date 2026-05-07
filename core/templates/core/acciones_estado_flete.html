@@ -1,0 +1,33 @@
+<a href="{% url 'editar_flete' flete.id %}">Editar</a>
+
+{% if flete.estado == "pendiente" %}
+    <form method="post" action="{% url 'cambiar_estado_flete' flete.id 'en_curso' %}">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ request.path }}">
+        <button type="submit">En curso</button>
+    </form>
+{% endif %}
+
+{% if flete.estado == "en_curso" %}
+    <form method="post" action="{% url 'cambiar_estado_flete' flete.id 'finalizado' %}">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ request.path }}">
+        <button type="submit" class="btn-exito">Finalizar</button>
+    </form>
+{% endif %}
+
+{% if flete.estado != "finalizado" and flete.estado != "cancelado" %}
+    <form method="post" action="{% url 'cambiar_estado_flete' flete.id 'cancelado' %}">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ request.path }}">
+        <button type="submit" class="btn-peligro">Cancelar</button>
+    </form>
+{% endif %}
+
+{% if flete.estado == "cancelado" %}
+    <form method="post" action="{% url 'cambiar_estado_flete' flete.id 'pendiente' %}">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ request.path }}">
+        <button type="submit">Reabrir</button>
+    </form>
+{% endif %}

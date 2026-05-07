@@ -1,0 +1,90 @@
+{% extends "core/base_panel.html" %}
+
+{% block title %}Choferes{% endblock %}
+
+{% block content %}
+<h1>Listado de Choferes</h1>
+
+<div class="acciones">
+    <a href="{% url 'crear_chofer' %}">Nuevo chofer</a>
+    <a href="{% url 'liquidacion_choferes' %}" class="secundario">Liquidacion</a>
+</div>
+
+<form method="get" class="filtros">
+    <div class="filtros-campo">
+        <label>Estado</label>
+        <select name="estado" onchange="this.form.requestSubmit ? this.form.requestSubmit() : this.form.submit()">
+            <option value="">Todos</option>
+            <option value="activo" {% if filtros.estado == "activo" %}selected{% endif %}>Activo</option>
+            <option value="inactivo" {% if filtros.estado == "inactivo" %}selected{% endif %}>Inactivo</option>
+        </select>
+    </div>
+    <div class="filtros-campo">
+        <label>Chofer</label>
+        <select name="chofer" onchange="this.form.requestSubmit ? this.form.requestSubmit() : this.form.submit()">
+            <option value="">Todos</option>
+            {% for ch in choferes_filtro %}
+                <option value="{{ ch.id }}" {% if filtros.chofer == ch.id|stringformat:"s" %}selected{% endif %}>{{ ch.nombre }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="filtros-campo">
+        <label>Porcentaje</label>
+        <select name="porcentaje" onchange="this.form.requestSubmit ? this.form.requestSubmit() : this.form.submit()">
+            <option value="">Todos</option>
+            <option value="estandar" {% if filtros.porcentaje == "estandar" %}selected{% endif %}>Estandar 60%</option>
+            <option value="excepcion" {% if filtros.porcentaje == "excepcion" %}selected{% endif %}>Excepciones</option>
+        </select>
+    </div>
+    <div class="filtros-acciones">
+        <button type="submit">Filtrar</button>
+        <a href="{% url 'lista_choferes' %}" class="btn-secundario">Limpiar</a>
+    </div>
+</form>
+
+{% if choferes %}
+<table>
+    <thead>
+        <tr>
+            <th>Nombre</th>
+            <th>Telefono</th>
+            <th>DNI</th>
+            <th>Liquidacion</th>
+            <th>Porcentaje liquidacion</th>
+            <th>Vehiculo</th>
+            <th>Patente</th>
+            <th>Estado</th>
+            <th>Codigo legacy</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for chofer in choferes %}
+        <tr>
+            <td>{{ chofer.nombre }}</td>
+            <td>{{ chofer.telefono|default:"-" }}</td>
+            <td>{{ chofer.dni|default:"-" }}</td>
+            <td>{{ chofer.get_tipo_liquidacion_display }}</td>
+            <td>
+                {% if chofer.porcentaje_liquidacion == 60 %}
+                    <span class="estado">{{ chofer.porcentaje_liquidacion }}%</span>
+                {% else %}
+                    <span class="estado excepcion">Excepcion: {{ chofer.porcentaje_liquidacion }}%</span>
+                {% endif %}
+            </td>
+            <td>{{ chofer.vehiculo|default:"-" }}</td>
+            <td>{{ chofer.patente|default:"-" }}</td>
+            <td><span class="estado {{ chofer.estado }}">{{ chofer.get_estado_display }}</span></td>
+            <td>{{ chofer.codigo_legacy|default:"-" }}</td>
+            <td class="acciones-tabla">
+                <a href="{% url 'detalle_liquidacion_chofer' chofer.id %}">Liquidacion</a>
+                <a href="{% url 'editar_chofer' chofer.id %}">Editar</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<div class="sin-datos">No hay choferes cargados.</div>
+{% endif %}
+{% endblock %}

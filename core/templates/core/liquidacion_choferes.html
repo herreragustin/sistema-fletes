@@ -1,0 +1,129 @@
+{% extends "core/base_panel.html" %}
+
+{% block title %}Liquidacion de choferes{% endblock %}
+
+{% block content %}
+<h1>Liquidacion de choferes</h1>
+
+<form method="get" class="filtros">
+    <div class="filtros-campo">
+        <label>Chofer</label>
+        <select name="chofer" onchange="this.form.requestSubmit ? this.form.requestSubmit() : this.form.submit()">
+            <option value="">Todos</option>
+            {% for chofer in choferes_filtro %}
+                <option value="{{ chofer.id }}" {% if filtros.chofer == chofer.id|stringformat:"s" %}selected{% endif %}>{{ chofer.nombre }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="filtros-acciones">
+        <a href="{% url 'liquidacion_choferes' %}" class="btn-secundario">Limpiar</a>
+    </div>
+</form>
+
+<div class="resumen-total">
+    <div>
+        <span class="muted">Choferes con viajes</span>
+        <strong>{{ choferes|length }}</strong>
+    </div>
+    <div>
+        <span class="muted">Viajes pendientes</span>
+        <strong>{{ viajes_pendientes|length }}</strong>
+    </div>
+    <div>
+        <span class="muted">Total pendiente</span>
+        <strong>${{ total_pendiente|miles_punto }}</strong>
+    </div>
+</div>
+
+<h2>Resumen por chofer</h2>
+
+{% if choferes %}
+<table>
+    <thead>
+        <tr>
+            <th>Chofer</th>
+            <th>Tipo de liquidacion</th>
+            <th>Porcentaje</th>
+            <th>Periodo aplicado</th>
+            <th>Total pendiente</th>
+            <th>Viajes pendientes</th>
+            <th>Viajes pagados</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for chofer in choferes %}
+        <tr>
+            <td>{{ chofer.nombre }}</td>
+            <td>{{ chofer.get_tipo_liquidacion_display }}</td>
+            <td>
+                {% if chofer.porcentaje_liquidacion == 60 %}
+                    <span class="estado">{{ chofer.porcentaje_liquidacion }}%</span>
+                {% else %}
+                    <span class="estado excepcion">Excepcion: {{ chofer.porcentaje_liquidacion }}%</span>
+                {% endif %}
+            </td>
+            <td>
+                {{ chofer.periodo_desde|date:"d/m/Y" }} al {{ chofer.periodo_hasta|date:"d/m/Y" }}
+                {% if chofer.periodo_es_historico %}
+                    <br><span class="muted">Ultimo periodo con movimientos</span>
+                {% endif %}
+            </td>
+            <td>${{ chofer.total_pendiente|miles_punto }}</td>
+            <td>{{ chofer.viajes_pendientes_count }}</td>
+            <td>{{ chofer.viajes_pagados_count }}</td>
+            <td class="acciones-tabla">
+                <a href="{% url 'detalle_liquidacion_chofer' chofer.id %}">Ver detalle</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<div class="sin-datos">No hay choferes para mostrar.</div>
+{% endif %}
+
+<h2>Viajes pendientes de pago</h2>
+
+{% if viajes_pendientes %}
+<table>
+    <thead>
+        <tr>
+            <th>Fecha</th>
+            <th>Chofer</th>
+            <th>Cliente</th>
+            <th>Origen</th>
+            <th>Destino</th>
+            <th>Precio cliente</th>
+            <th>Importe chofer</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for flete in viajes_pendientes %}
+        <tr>
+            <td>{{ flete.fecha }}</td>
+            <td>{{ flete.chofer.nombre }}</td>
+            <td>{{ flete.cliente.nombre }}</td>
+            <td>{{ flete.direccion_origen }}</td>
+            <td>{{ flete.direccion_destino }}</td>
+            <td>${{ flete.precio|miles_punto }}</td>
+            <td>${{ flete.importe_chofer|miles_punto }}</td>
+            <td><span class="estado {{ flete.estado_pago_chofer }}">{{ flete.get_estado_pago_chofer_display }}</span></td>
+            <td class="acciones-tabla">
+                <a href="{% url 'detalle_liquidacion_chofer' flete.chofer.id %}">Ver detalle</a>
+                <form method="post" action="{% url 'marcar_pago_chofer_pagado' flete.id %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                    <button type="submit" class="btn-exito">Marcar pagado</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<div class="sin-datos">No hay viajes pendientes para los filtros elegidos.</div>
+{% endif %}
+{% endblock %}
