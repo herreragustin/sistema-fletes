@@ -659,6 +659,8 @@ def cerrar_cobranza_cliente(request, cliente_id):
     cliente = get_object_or_404(Cliente, id=cliente_id)
     fecha_desde = request.POST.get("fecha_desde")
     fecha_hasta = request.POST.get("fecha_hasta")
+    fecha_desde = None if fecha_desde in {"", "None", None} else fecha_desde
+    fecha_hasta = None if fecha_hasta in {"", "None", None} else fecha_hasta
 
     pendientes = Flete.objects.filter(
         cliente=cliente,
@@ -690,6 +692,8 @@ def cerrar_liquidacion_chofer(request, chofer_id):
     chofer = get_object_or_404(Chofer, id=chofer_id)
     fecha_desde = request.POST.get("fecha_desde")
     fecha_hasta = request.POST.get("fecha_hasta")
+    fecha_desde = None if fecha_desde in {"", "None", None} else fecha_desde
+    fecha_hasta = None if fecha_hasta in {"", "None", None} else fecha_hasta
 
     if not fecha_desde or not fecha_hasta:
         fecha_desde_default, fecha_hasta_default, _ = _resolver_periodo_liquidacion_con_movimientos(chofer, timezone.localdate())

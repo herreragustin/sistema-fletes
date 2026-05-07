@@ -54,7 +54,13 @@
     <tbody>
         {% for chofer in choferes %}
         <tr>
-            <td>{{ chofer.nombre }}</td>
+            <td>
+                {{ chofer.nombre }}
+                {% if chofer.viajes_pendientes_count %}
+                    <br><span class="indicador-cierre">Liquidacion pendiente</span>
+                    <br><span class="muted">{{ chofer.viajes_pendientes_count }} viajes | ${{ chofer.total_pendiente|miles_punto }}</span>
+                {% endif %}
+            </td>
             <td>{{ chofer.get_tipo_liquidacion_display }}</td>
             <td>
                 {% if chofer.porcentaje_liquidacion == 60 %}

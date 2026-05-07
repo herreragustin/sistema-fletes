@@ -77,6 +77,7 @@ Base actual:
 - filtros con submit automatico en varios listados
 - importes formateados con separador de miles
 - resaltado de excepciones en porcentaje de liquidacion de choferes
+- indicadores visuales de cierre disponible en cuenta corriente y liquidacion
 
 ## Reglas de negocio ya definidas
 

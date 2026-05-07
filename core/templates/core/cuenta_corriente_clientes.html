@@ -51,7 +51,13 @@
     <tbody>
         {% for cliente in clientes %}
         <tr>
-            <td>{{ cliente.nombre }}</td>
+            <td>
+                {{ cliente.nombre }}
+                {% if cliente.fletes_pendientes_count %}
+                    <br><span class="indicador-cierre">Cierre disponible</span>
+                    <br><span class="muted">{{ cliente.fletes_pendientes_count }} viajes | ${{ cliente.saldo_adeudado|miles_punto }}</span>
+                {% endif %}
+            </td>
             <td>${{ cliente.saldo_adeudado|miles_punto }}</td>
             <td>{{ cliente.fletes_pendientes_count }}</td>
             <td>{{ cliente.fletes_cobrados_count }}</td>

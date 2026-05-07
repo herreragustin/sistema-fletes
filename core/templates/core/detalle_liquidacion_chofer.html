@@ -58,8 +58,8 @@
     <div class="acciones">
         <form method="post" action="{% url 'cerrar_liquidacion_chofer' chofer.id %}" onsubmit="return confirm('Se marcaran como pagados {{ pendientes_periodo_count }} viajes pendientes por un total de ${{ total_pendiente_periodo|miles_punto }}.');">
             {% csrf_token %}
-            <input type="hidden" name="fecha_desde" value="{{ filtros.fecha_desde }}">
-            <input type="hidden" name="fecha_hasta" value="{{ filtros.fecha_hasta }}">
+            <input type="hidden" name="fecha_desde" value="{{ filtros.fecha_desde|default_if_none:'' }}">
+            <input type="hidden" name="fecha_hasta" value="{{ filtros.fecha_hasta|default_if_none:'' }}">
             <input type="hidden" name="next" value="{{ request.get_full_path }}">
             <button type="submit" class="btn-exito">Cerrar liquidacion</button>
         </form>
