@@ -56,11 +56,35 @@ def panel_inicio(request):
     hoy = timezone.localdate()
     fletes_hoy = Flete.objects.select_related("cliente", "chofer").filter(fecha=hoy).order_by("hora_inicio")
     ultimos_fletes = Flete.objects.select_related("cliente", "chofer").order_by("-fecha_creacion", "-id")[:5]
+    fletes_cobro_pendiente = Flete.objects.filter(
+        estado="finalizado",
+        forma_de_pago="cuenta_corriente",
+        estado_cobro_cliente="pendiente",
+    )
+    fletes_liquidacion_pendiente = Flete.objects.select_related("chofer").filter(
+        estado="finalizado",
+        estado_pago_chofer="pendiente",
+    )
+    clientes_con_cobranza_pendiente = Cliente.objects.filter(
+        fletes__estado="finalizado",
+        fletes__forma_de_pago="cuenta_corriente",
+        fletes__estado_cobro_cliente="pendiente",
+    ).distinct().count()
+    choferes_con_liquidacion_pendiente = Chofer.objects.filter(
+        fletes__estado="finalizado",
+        fletes__estado_pago_chofer="pendiente",
+    ).distinct().count()
+    total_cobranza_pendiente = fletes_cobro_pendiente.aggregate(total=Sum("precio"))["total"] or 0
+    total_liquidacion_pendiente = _sumar_importe_chofer(fletes_liquidacion_pendiente)
 
     return render(request, "core/panel_inicio.html", {
         "hoy": hoy,
         "fletes_hoy": fletes_hoy,
         "ultimos_fletes": ultimos_fletes,
+        "clientes_con_cobranza_pendiente": clientes_con_cobranza_pendiente,
+        "choferes_con_liquidacion_pendiente": choferes_con_liquidacion_pendiente,
+        "total_cobranza_pendiente": total_cobranza_pendiente,
+        "total_liquidacion_pendiente": total_liquidacion_pendiente,
     })
 
 
