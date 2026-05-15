@@ -4,6 +4,7 @@ from decimal import Decimal
 from django.db.models import Count, DecimalField, Q, Sum, Value
 from django.db.models.functions import Coalesce
 from django.contrib import messages
+from django.http import JsonResponse
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 from django.shortcuts import render, get_object_or_404, redirect
@@ -13,6 +14,37 @@ from .forms import ClienteForm, ChoferForm, FleteForm
 
 def _sumar_importe_chofer(fletes):
     return sum((flete.importe_chofer for flete in fletes), Decimal("0"))
+
+
+def _direcciones_cliente(cliente, limite=20):
+    direcciones = []
+    vistas = set()
+
+    def agregar(valor):
+        if not valor:
+            return
+        texto = str(valor).strip()
+        if not texto:
+            return
+        clave = texto.casefold()
+        if clave in vistas:
+            return
+        vistas.add(clave)
+        direcciones.append(texto)
+
+    agregar(cliente.direccion)
+
+    fletes = (
+        Flete.objects.filter(cliente=cliente)
+        .order_by("-fecha", "-hora_inicio", "-id")
+        .values_list("direccion_origen", "direccion_destino")[:limite]
+    )
+
+    for origen, destino in fletes:
+        agregar(origen)
+        agregar(destino)
+
+    return direcciones
 
 
 def _periodo_anterior(tipo_liquidacion, fecha_desde):
@@ -183,6 +215,11 @@ def crear_flete(request):
         "titulo": "Nuevo flete",
         "texto_boton": "Crear flete",
     })
+
+
+def direcciones_cliente(request, cliente_id):
+    cliente = get_object_or_404(Cliente, id=cliente_id)
+    return JsonResponse({"direcciones": _direcciones_cliente(cliente)})
 
 
 @require_POST

@@ -7,11 +7,153 @@
 
 <form method="post" class="formulario-principal">
     {% csrf_token %}
-    {{ form.as_p }}
+    {% if form.non_field_errors %}
+        <ul class="errorlist">
+            {% for error in form.non_field_errors %}
+                <li>{{ error }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    <p>
+        {{ form.cliente.label_tag }}
+        {{ form.cliente }}
+        {% if form.cliente.errors %}{{ form.cliente.errors }}{% endif %}
+    </p>
+    <p>
+        {{ form.chofer.label_tag }}
+        {{ form.chofer }}
+        {% if form.chofer.errors %}{{ form.chofer.errors }}{% endif %}
+    </p>
+    <p>
+        {{ form.fecha.label_tag }}
+        {{ form.fecha }}
+        {% if form.fecha.errors %}{{ form.fecha.errors }}{% endif %}
+    </p>
+    <p>
+        {{ form.hora_inicio.label_tag }}
+        {{ form.hora_inicio }}
+        {% if form.hora_inicio.errors %}{{ form.hora_inicio.errors }}{% endif %}
+    </p>
+
+    <div class="direccion-sugerida">
+        <label for="selector_origen">Direccion sugerida para origen</label>
+        <select id="selector_origen" data-target="id_direccion_origen">
+            <option value="">Elegir direccion...</option>
+        </select>
+        <span class="muted">Tambien podés escribir una direccion nueva manualmente.</span>
+    </div>
+    <p>
+        {{ form.direccion_origen.label_tag }}
+        {{ form.direccion_origen }}
+        {% if form.direccion_origen.errors %}{{ form.direccion_origen.errors }}{% endif %}
+    </p>
+
+    <div class="direccion-sugerida">
+        <label for="selector_destino">Direccion sugerida para destino</label>
+        <select id="selector_destino" data-target="id_direccion_destino">
+            <option value="">Elegir direccion...</option>
+        </select>
+        <span class="muted">Tambien podés escribir una direccion nueva manualmente.</span>
+    </div>
+    <p>
+        {{ form.direccion_destino.label_tag }}
+        {{ form.direccion_destino }}
+        {% if form.direccion_destino.errors %}{{ form.direccion_destino.errors }}{% endif %}
+    </p>
+
+    <p>
+        {{ form.ayudantes.label_tag }}
+        {{ form.ayudantes }}
+        {% if form.ayudantes.errors %}{{ form.ayudantes.errors }}{% endif %}
+    </p>
+    <p>
+        {{ form.precio.label_tag }}
+        {{ form.precio }}
+        {% if form.precio.errors %}{{ form.precio.errors }}{% endif %}
+    </p>
+    <p>
+        {{ form.forma_de_pago.label_tag }}
+        {{ form.forma_de_pago }}
+        {% if form.forma_de_pago.errors %}{{ form.forma_de_pago.errors }}{% endif %}
+    </p>
+    <p>
+        {{ form.estado.label_tag }}
+        {{ form.estado }}
+        {% if form.estado.errors %}{{ form.estado.errors }}{% endif %}
+    </p>
 
     <div class="acciones">
         <button type="submit">{{ texto_boton }}</button>
         <a href="{% url 'lista_fletes' %}" class="secundario">Volver</a>
     </div>
 </form>
+
+<script>
+(() => {
+    const clienteSelect = document.getElementById("id_cliente");
+    const origenSelect = document.getElementById("selector_origen");
+    const destinoSelect = document.getElementById("selector_destino");
+    const baseDireccionesUrl = "{% url 'direcciones_cliente' 0 %}";
+
+    if (!clienteSelect || !origenSelect || !destinoSelect) {
+        return;
+    }
+
+    const llenarOpciones = (select, direcciones) => {
+        const placeholder = select === origenSelect ? "Elegir direccion..." : "Elegir direccion...";
+        const actual = select.value;
+        select.innerHTML = "";
+        const baseOption = document.createElement("option");
+        baseOption.value = "";
+        baseOption.textContent = placeholder;
+        select.appendChild(baseOption);
+
+        direcciones.forEach((direccion) => {
+            const option = document.createElement("option");
+            option.value = direccion;
+            option.textContent = direccion;
+            select.appendChild(option);
+        });
+
+        select.value = actual;
+    };
+
+    const actualizarDireccion = (event) => {
+        const targetId = event.target.dataset.target;
+        const destinoInput = document.getElementById(targetId);
+        if (destinoInput && event.target.value) {
+            destinoInput.value = event.target.value;
+        }
+    };
+
+    const cargarDirecciones = async (clienteId) => {
+        llenarOpciones(origenSelect, []);
+        llenarOpciones(destinoSelect, []);
+
+        if (!clienteId) {
+            return;
+        }
+
+        try {
+            const response = await fetch(baseDireccionesUrl.replace("/0/", `/${clienteId}/`));
+            if (!response.ok) {
+                return;
+            }
+            const data = await response.json();
+            const direcciones = Array.isArray(data.direcciones) ? data.direcciones : [];
+            llenarOpciones(origenSelect, direcciones);
+            llenarOpciones(destinoSelect, direcciones);
+        } catch (error) {
+            console.error("No se pudieron cargar las direcciones del cliente.", error);
+        }
+    };
+
+    clienteSelect.addEventListener("change", () => cargarDirecciones(clienteSelect.value));
+    origenSelect.addEventListener("change", actualizarDireccion);
+    destinoSelect.addEventListener("change", actualizarDireccion);
+
+    cargarDirecciones(clienteSelect.value);
+})();
+</script>
 {% endblock %}
