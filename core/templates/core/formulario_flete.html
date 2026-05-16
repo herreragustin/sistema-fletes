@@ -35,29 +35,21 @@
         {{ form.hora_inicio }}
         {% if form.hora_inicio.errors %}{{ form.hora_inicio.errors }}{% endif %}
     </p>
-    <p class="campo-auxiliar">
-        <label for="selector_origen">Direccion sugerida para origen</label>
-        <select id="selector_origen">
-            <option value="">Elegir direccion sugerida...</option>
-            <option value="__otra__">Otra direccion...</option>
-        </select>
-    </p>
     <p>
         {{ form.direccion_origen.label_tag }}
-        {{ form.direccion_origen }}
+        <div class="campo-autocomplete" data-campo="origen">
+            {{ form.direccion_origen }}
+            <div id="sugerencias_origen" class="sugerencias-direccion"></div>
+        </div>
         <span class="muted">Podes escribir una direccion nueva o elegir una sugerida.</span>
         {% if form.direccion_origen.errors %}{{ form.direccion_origen.errors }}{% endif %}
     </p>
-    <p class="campo-auxiliar">
-        <label for="selector_destino">Direccion sugerida para destino</label>
-        <select id="selector_destino">
-            <option value="">Elegir direccion sugerida...</option>
-            <option value="__otra__">Otra direccion...</option>
-        </select>
-    </p>
     <p>
         {{ form.direccion_destino.label_tag }}
-        {{ form.direccion_destino }}
+        <div class="campo-autocomplete" data-campo="destino">
+            {{ form.direccion_destino }}
+            <div id="sugerencias_destino" class="sugerencias-direccion"></div>
+        </div>
         <span class="muted">Podes escribir una direccion nueva o elegir una sugerida.</span>
         {% if form.direccion_destino.errors %}{{ form.direccion_destino.errors }}{% endif %}
     </p>
@@ -94,65 +86,61 @@
     const clienteSelect = document.getElementById("id_cliente");
     const origenInput = document.getElementById("id_direccion_origen");
     const destinoInput = document.getElementById("id_direccion_destino");
-    const origenSelect = document.getElementById("selector_origen");
-    const destinoSelect = document.getElementById("selector_destino");
+    const origenSugerencias = document.getElementById("sugerencias_origen");
+    const destinoSugerencias = document.getElementById("sugerencias_destino");
     const baseDireccionesUrl = "{% url 'direcciones_cliente' 0 %}";
-    const opcionOtra = "__otra__";
 
-    if (!clienteSelect || !origenInput || !destinoInput || !origenSelect || !destinoSelect) {
+    if (!clienteSelect || !origenInput || !destinoInput || !origenSugerencias || !destinoSugerencias) {
         return;
     }
 
-    const llenarOpciones = (select, direcciones) => {
-        select.innerHTML = "";
+    let direccionesCliente = [];
 
-        const placeholder = document.createElement("option");
-        placeholder.value = "";
-        placeholder.textContent = "Elegir direccion sugerida...";
-        select.appendChild(placeholder);
+    const normalizar = (valor) => (valor || "").trim().toLowerCase();
 
-        direcciones.forEach((direccion) => {
-            const option = document.createElement("option");
-            option.value = direccion;
-            option.textContent = direccion;
-            select.appendChild(option);
+    const ocultarSugerencias = (contenedor) => {
+        contenedor.innerHTML = "";
+        contenedor.classList.remove("visible");
+    };
+
+    const crearSugerencia = (direccion, input, contenedor) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "sugerencia-item";
+        button.textContent = direccion;
+        button.addEventListener("click", () => {
+            input.value = direccion;
+            ocultarSugerencias(contenedor);
+            input.focus();
+        });
+        return button;
+    };
+
+    const mostrarSugerencias = (input, contenedor) => {
+        const texto = normalizar(input.value);
+        const sugerencias = direccionesCliente.filter((direccion) => {
+            if (!texto) {
+                return true;
+            }
+            return normalizar(direccion).includes(texto);
         });
 
-        const otra = document.createElement("option");
-        otra.value = opcionOtra;
-        otra.textContent = "Otra direccion...";
-        select.appendChild(otra);
-    };
-
-    const sincronizarSelector = (select, input) => {
-        const valor = (input.value || "").trim();
-
-        if (!valor) {
-            select.value = "";
+        if (!sugerencias.length) {
+            ocultarSugerencias(contenedor);
             return;
         }
 
-        const existe = Array.from(select.options).some((option) => option.value === valor);
-        select.value = existe ? valor : opcionOtra;
-    };
-
-    const actualizarDireccion = (select, input) => {
-        if (select.value === opcionOtra) {
-            input.value = "";
-            input.focus();
-            return;
-        }
-
-        if (select.value) {
-            input.value = select.value;
-        }
+        contenedor.innerHTML = "";
+        sugerencias.forEach((direccion) => {
+            contenedor.appendChild(crearSugerencia(direccion, input, contenedor));
+        });
+        contenedor.classList.add("visible");
     };
 
     const cargarDirecciones = async (clienteId) => {
-        llenarOpciones(origenSelect, []);
-        llenarOpciones(destinoSelect, []);
-        sincronizarSelector(origenSelect, origenInput);
-        sincronizarSelector(destinoSelect, destinoInput);
+        direccionesCliente = [];
+        ocultarSugerencias(origenSugerencias);
+        ocultarSugerencias(destinoSugerencias);
 
         if (!clienteId) {
             return;
@@ -163,21 +151,34 @@
             if (!response.ok) {
                 return;
             }
+
             const data = await response.json();
-            const direcciones = Array.isArray(data.direcciones) ? data.direcciones : [];
-            llenarOpciones(origenSelect, direcciones);
-            llenarOpciones(destinoSelect, direcciones);
-            sincronizarSelector(origenSelect, origenInput);
-            sincronizarSelector(destinoSelect, destinoInput);
+            direccionesCliente = Array.isArray(data.direcciones) ? data.direcciones : [];
         } catch (error) {
             console.error("No se pudieron cargar las direcciones del cliente.", error);
         }
     };
 
-    origenSelect.addEventListener("change", () => actualizarDireccion(origenSelect, origenInput));
-    destinoSelect.addEventListener("change", () => actualizarDireccion(destinoSelect, destinoInput));
-    origenInput.addEventListener("input", () => sincronizarSelector(origenSelect, origenInput));
-    destinoInput.addEventListener("input", () => sincronizarSelector(destinoSelect, destinoInput));
+    const vincularAutocomplete = (input, contenedor) => {
+        input.addEventListener("focus", () => mostrarSugerencias(input, contenedor));
+        input.addEventListener("input", () => mostrarSugerencias(input, contenedor));
+
+        input.addEventListener("keydown", (event) => {
+            if (event.key === "Escape") {
+                ocultarSugerencias(contenedor);
+            }
+        });
+    };
+
+    document.addEventListener("click", (event) => {
+        if (!event.target.closest(".campo-autocomplete")) {
+            ocultarSugerencias(origenSugerencias);
+            ocultarSugerencias(destinoSugerencias);
+        }
+    });
+
+    vincularAutocomplete(origenInput, origenSugerencias);
+    vincularAutocomplete(destinoInput, destinoSugerencias);
     clienteSelect.addEventListener("change", () => cargarDirecciones(clienteSelect.value));
     cargarDirecciones(clienteSelect.value);
 })();

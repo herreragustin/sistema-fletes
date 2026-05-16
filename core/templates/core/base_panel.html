@@ -87,15 +87,51 @@
             margin: 0 0 14px;
         }
 
-        .campo-auxiliar {
-            margin: 0 0 8px;
-        }
-
         form.formulario-principal input,
         form.formulario-principal select,
         form.formulario-principal textarea {
             width: 100%;
             box-sizing: border-box;
+        }
+
+        .campo-autocomplete {
+            position: relative;
+        }
+
+        .sugerencias-direccion {
+            position: absolute;
+            top: calc(100% + 4px);
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            box-shadow: 0 8px 20px rgba(15, 23, 42, 0.12);
+            z-index: 20;
+            max-height: 220px;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .sugerencias-direccion.visible {
+            display: block;
+        }
+
+        .sugerencia-item {
+            width: 100%;
+            border: 0;
+            background: white;
+            color: #111827;
+            text-align: left;
+            padding: 10px 12px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .sugerencia-item:hover,
+        .sugerencia-item.activa {
+            background: #eff6ff;
+            color: #1d4ed8;
         }
 
         .errorlist {
