@@ -35,32 +35,20 @@
         {{ form.hora_inicio }}
         {% if form.hora_inicio.errors %}{{ form.hora_inicio.errors }}{% endif %}
     </p>
-
-    <div class="direccion-sugerida">
-        <label for="selector_origen">Direccion sugerida para origen</label>
-        <select id="selector_origen" data-target="id_direccion_origen">
-            <option value="">Elegir direccion...</option>
-        </select>
-        <span class="muted">Tambien podés escribir una direccion nueva manualmente.</span>
-    </div>
     <p>
         {{ form.direccion_origen.label_tag }}
         {{ form.direccion_origen }}
+        <span class="muted">Podes escribir una direccion nueva o elegir una sugerida.</span>
         {% if form.direccion_origen.errors %}{{ form.direccion_origen.errors }}{% endif %}
     </p>
-
-    <div class="direccion-sugerida">
-        <label for="selector_destino">Direccion sugerida para destino</label>
-        <select id="selector_destino" data-target="id_direccion_destino">
-            <option value="">Elegir direccion...</option>
-        </select>
-        <span class="muted">Tambien podés escribir una direccion nueva manualmente.</span>
-    </div>
     <p>
         {{ form.direccion_destino.label_tag }}
         {{ form.direccion_destino }}
+        <span class="muted">Podes escribir una direccion nueva o elegir una sugerida.</span>
         {% if form.direccion_destino.errors %}{{ form.direccion_destino.errors }}{% endif %}
     </p>
+
+    <datalist id="direcciones_cliente"></datalist>
 
     <p>
         {{ form.ayudantes.label_tag }}
@@ -92,44 +80,27 @@
 <script>
 (() => {
     const clienteSelect = document.getElementById("id_cliente");
-    const origenSelect = document.getElementById("selector_origen");
-    const destinoSelect = document.getElementById("selector_destino");
+    const origenInput = document.getElementById("id_direccion_origen");
+    const destinoInput = document.getElementById("id_direccion_destino");
+    const datalist = document.getElementById("direcciones_cliente");
     const baseDireccionesUrl = "{% url 'direcciones_cliente' 0 %}";
 
-    if (!clienteSelect || !origenSelect || !destinoSelect) {
+    if (!clienteSelect || !origenInput || !destinoInput || !datalist) {
         return;
     }
 
-    const llenarOpciones = (select, direcciones) => {
-        const placeholder = select === origenSelect ? "Elegir direccion..." : "Elegir direccion...";
-        const actual = select.value;
-        select.innerHTML = "";
-        const baseOption = document.createElement("option");
-        baseOption.value = "";
-        baseOption.textContent = placeholder;
-        select.appendChild(baseOption);
+    const llenarOpciones = (direcciones) => {
+        datalist.innerHTML = "";
 
         direcciones.forEach((direccion) => {
             const option = document.createElement("option");
             option.value = direccion;
-            option.textContent = direccion;
-            select.appendChild(option);
+            datalist.appendChild(option);
         });
-
-        select.value = actual;
-    };
-
-    const actualizarDireccion = (event) => {
-        const targetId = event.target.dataset.target;
-        const destinoInput = document.getElementById(targetId);
-        if (destinoInput && event.target.value) {
-            destinoInput.value = event.target.value;
-        }
     };
 
     const cargarDirecciones = async (clienteId) => {
-        llenarOpciones(origenSelect, []);
-        llenarOpciones(destinoSelect, []);
+        llenarOpciones([]);
 
         if (!clienteId) {
             return;
@@ -142,17 +113,13 @@
             }
             const data = await response.json();
             const direcciones = Array.isArray(data.direcciones) ? data.direcciones : [];
-            llenarOpciones(origenSelect, direcciones);
-            llenarOpciones(destinoSelect, direcciones);
+            llenarOpciones(direcciones);
         } catch (error) {
             console.error("No se pudieron cargar las direcciones del cliente.", error);
         }
     };
 
     clienteSelect.addEventListener("change", () => cargarDirecciones(clienteSelect.value));
-    origenSelect.addEventListener("change", actualizarDireccion);
-    destinoSelect.addEventListener("change", actualizarDireccion);
-
     cargarDirecciones(clienteSelect.value);
 })();
 </script>

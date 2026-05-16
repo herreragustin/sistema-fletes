@@ -56,6 +56,8 @@ class FleteForm(forms.ModelForm):
 
         self.fields["cliente"].queryset = cliente_qs.order_by("nombre")
         self.fields["chofer"].queryset = chofer_qs.order_by("nombre")
+        self.fields["direccion_origen"].widget.attrs["list"] = "direcciones_cliente"
+        self.fields["direccion_destino"].widget.attrs["list"] = "direcciones_cliente"
 
     class Meta:
         model = Flete
