@@ -85,6 +85,29 @@ def _resolver_periodo_liquidacion_con_movimientos(chofer, referencia=None):
     return fecha_desde, fecha_hasta, periodo_es_historico
 
 
+def _mensajes_validacion_flete_para_estado(flete, estado_destino):
+    mensajes_error = []
+    origen = (flete.direccion_origen or "").strip()
+    destino = (flete.direccion_destino or "").strip()
+    precio = flete.precio
+
+    if estado_destino in {"en_curso", "finalizado"} and not flete.chofer_id:
+        if estado_destino == "en_curso":
+            mensajes_error.append("No se puede iniciar un flete sin chofer asignado")
+        else:
+            mensajes_error.append("No se puede finalizar un flete sin chofer asignado")
+
+    if estado_destino == "finalizado":
+        if not origen:
+            mensajes_error.append("No se puede finalizar un flete sin origen")
+        if not destino:
+            mensajes_error.append("No se puede finalizar un flete sin destino")
+        if precio is None or precio <= 0:
+            mensajes_error.append("No se puede finalizar un flete con precio menor o igual a cero")
+
+    return mensajes_error
+
+
 def panel_inicio(request):
     hoy = timezone.localdate()
     fletes_hoy = Flete.objects.select_related("cliente", "chofer").filter(fecha=hoy).order_by("hora_inicio")
@@ -268,6 +291,11 @@ def direcciones_cliente(request, cliente_id):
 def finalizar_flete(request, flete_id):
     flete = get_object_or_404(Flete, id=flete_id)
     if flete.estado == "en_curso":
+        errores = _mensajes_validacion_flete_para_estado(flete, "finalizado")
+        if errores:
+            for error in errores:
+                messages.error(request, error)
+            return redirect(request.POST.get("next") or "lista_fletes")
         flete.estado = "finalizado"
         flete.save()
     return redirect(request.POST.get("next") or "lista_fletes")
@@ -288,6 +316,11 @@ def cambiar_estado_flete(request, flete_id, estado):
     }
 
     if estado in transiciones_validas.get(flete.estado, set()):
+        errores = _mensajes_validacion_flete_para_estado(flete, estado)
+        if errores:
+            for error in errores:
+                messages.error(request, error)
+            return redirect(request.POST.get("next") or "lista_fletes")
         flete.estado = estado
         flete.save()
 

@@ -169,8 +169,11 @@ class Flete(models.Model):
     def clean(self):
         from django.core.exceptions import ValidationError
 
+        if not self.chofer_id or not self.fecha or not self.hora_inicio:
+            return
+
         conflicto = Flete.objects.filter(
-            chofer=self.chofer,
+            chofer_id=self.chofer_id,
             fecha=self.fecha,
             hora_inicio=self.hora_inicio,
         ).exclude(id=self.id)
