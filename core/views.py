@@ -183,6 +183,8 @@ def reportes(request):
 
 def lista_fletes(request):
     fletes = Flete.objects.select_related("cliente", "chofer").all()
+    clientes = Cliente.objects.order_by("nombre")
+    choferes = Chofer.objects.order_by("nombre")
 
     # filtros
     filtro_rapido = request.GET.get("filtro")
@@ -221,6 +223,8 @@ def lista_fletes(request):
         fletes = fletes.filter(forma_de_pago=forma_de_pago)
 
     fletes = fletes.order_by("-fecha", "-hora_inicio")
+    cliente_seleccionado = clientes.filter(id=cliente).first() if cliente else None
+    chofer_seleccionado = choferes.filter(id=chofer).first() if chofer else None
 
     filtros_actuales = {
         "filtro": filtro_rapido,
@@ -256,11 +260,13 @@ def lista_fletes(request):
 
     context = {
         "fletes": fletes,
-        "clientes": Cliente.objects.order_by("nombre"),
-        "choferes": Chofer.objects.order_by("nombre"),
+        "clientes": clientes,
+        "choferes": choferes,
         "formas_de_pago": Flete.FORMA_DE_PAGO,
         "filtros": filtros_actuales,
         "filtros_rapidos": filtros_rapidos,
+        "cliente_seleccionado": cliente_seleccionado,
+        "chofer_seleccionado": chofer_seleccionado,
     }
 
     return render(request, "core/lista_fletes_panel.html", context)

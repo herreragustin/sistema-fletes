@@ -9,6 +9,18 @@
     <a href="{% url 'crear_flete' %}">Nuevo flete</a>
 </div>
 
+{% if cliente_seleccionado or chofer_seleccionado %}
+<div class="contexto-filtro">
+    {% if cliente_seleccionado %}
+        <span><strong>Mostrando fletes del cliente:</strong> {{ cliente_seleccionado.nombre }}</span>
+    {% endif %}
+    {% if chofer_seleccionado %}
+        <span><strong>Mostrando fletes del chofer:</strong> {{ chofer_seleccionado.nombre }}</span>
+    {% endif %}
+    <a href="{% url 'lista_fletes' %}" class="btn-secundario">Ver todos</a>
+</div>
+{% endif %}
+
 <div class="filtros-rapidos">
     {% for filtro_rapido in filtros_rapidos %}
         <a
