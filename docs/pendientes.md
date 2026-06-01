@@ -26,6 +26,11 @@
 - comparativos por periodo
 - reportes mas orientados a gestion
 
+## Historial operativo
+
+- evaluar si conviene ampliar la ficha de cliente con mas filtros o exportacion
+- evaluar si conviene ampliar la ficha de chofer con acceso directo a liquidaciones historicas
+
 ## Exportaciones
 
 - exportar reportes

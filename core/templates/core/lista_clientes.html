@@ -61,6 +61,7 @@
             <td>{{ cliente.codigo_legacy|default:"-" }}</td>
             <td>{{ cliente.origen_legacy|default:"-" }}</td>
             <td class="acciones-tabla">
+                <a href="{% url 'detalle_cliente' cliente.id %}">Ficha</a>
                 <a href="{% url 'detalle_cuenta_corriente_cliente' cliente.id %}">Cuenta corriente</a>
                 <a href="{% url 'editar_cliente' cliente.id %}">Editar</a>
             </td>

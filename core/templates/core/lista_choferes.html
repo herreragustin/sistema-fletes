@@ -77,6 +77,7 @@
             <td><span class="estado {{ chofer.estado }}">{{ chofer.get_estado_display }}</span></td>
             <td>{{ chofer.codigo_legacy|default:"-" }}</td>
             <td class="acciones-tabla">
+                <a href="{% url 'detalle_chofer' chofer.id %}">Ficha</a>
                 <a href="{% url 'detalle_liquidacion_chofer' chofer.id %}">Liquidacion</a>
                 <a href="{% url 'editar_chofer' chofer.id %}">Editar</a>
             </td>

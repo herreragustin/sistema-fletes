@@ -1,0 +1,94 @@
+{% extends "core/base_panel.html" %}
+
+{% block title %}Ficha del cliente{% endblock %}
+
+{% block content %}
+<h1>{{ cliente.nombre }}</h1>
+
+<div class="acciones">
+    <a href="{% url 'editar_cliente' cliente.id %}">Editar cliente</a>
+    <a href="{% url 'detalle_cuenta_corriente_cliente' cliente.id %}" class="secundario">Cuenta corriente</a>
+    <a href="{% url 'lista_fletes' %}?cliente={{ cliente.id }}" class="secundario">Ver todos los fletes de este cliente</a>
+    <a href="{% url 'lista_clientes' %}" class="secundario">Volver</a>
+</div>
+
+<div class="dashboard-bloque">
+    <h2>Historial del cliente</h2>
+    <div class="resumen-total">
+        <div>
+            <span>Total de fletes</span>
+            <strong>{{ total_fletes }}</strong>
+        </div>
+        <div>
+            <span>Fletes finalizados</span>
+            <strong>{{ total_finalizados }}</strong>
+        </div>
+        <div>
+            <span>Total facturado</span>
+            <strong>${{ total_facturado|miles_punto }}</strong>
+        </div>
+        <div>
+            <span>Total cobrado</span>
+            <strong>${{ total_cobrado|miles_punto }}</strong>
+        </div>
+        <div>
+            <span>Total pendiente</span>
+            <strong>${{ total_pendiente|miles_punto }}</strong>
+        </div>
+    </div>
+
+    <p>
+        <strong>Ultimo flete realizado:</strong>
+        {% if ultimo_flete %}
+            {{ ultimo_flete.fecha }}{% if ultimo_flete.chofer %} | {{ ultimo_flete.chofer.nombre }}{% endif %}
+        {% else %}
+            -
+        {% endif %}
+    </p>
+
+    <p>
+        <strong>Ultimas direcciones usadas:</strong>
+        {% if ultimas_direcciones %}
+            {{ ultimas_direcciones|join:", " }}
+        {% else %}
+            -
+        {% endif %}
+    </p>
+</div>
+
+<div class="dashboard-bloque">
+    <h2>Ultimos fletes del cliente</h2>
+    {% if ultimos_fletes %}
+    <table>
+        <thead>
+            <tr>
+                <th>Fecha</th>
+                <th>Estado</th>
+                <th>Chofer</th>
+                <th>Origen</th>
+                <th>Destino</th>
+                <th>Precio</th>
+                <th>Forma de pago</th>
+                <th>Estado de cobro</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for flete in ultimos_fletes %}
+            <tr>
+                <td>{{ flete.fecha }}</td>
+                <td><span class="estado {{ flete.estado }}">{{ flete.get_estado_display }}</span></td>
+                <td>{{ flete.chofer.nombre|default:"-" }}</td>
+                <td>{{ flete.direccion_origen }}</td>
+                <td>{{ flete.direccion_destino }}</td>
+                <td>${{ flete.precio|miles_punto }}</td>
+                <td>{{ flete.get_forma_de_pago_display|default:"Sin definir" }}</td>
+                <td><span class="estado {{ flete.estado_cobro_cliente }}">{{ flete.get_estado_cobro_cliente_display }}</span></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="sin-datos">Este cliente todavia no tiene fletes cargados.</div>
+    {% endif %}
+</div>
+{% endblock %}

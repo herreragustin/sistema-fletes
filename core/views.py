@@ -423,6 +423,30 @@ def editar_cliente(request, cliente_id):
     })
 
 
+def detalle_cliente(request, cliente_id):
+    cliente = get_object_or_404(Cliente, id=cliente_id)
+    fletes_qs = Flete.objects.select_related("chofer").filter(cliente=cliente).order_by("-fecha", "-hora_inicio", "-id")
+    ultimos_fletes = list(fletes_qs[:10])
+    total_fletes = fletes_qs.count()
+    total_finalizados = fletes_qs.filter(estado="finalizado").count()
+    ultimo_flete = fletes_qs.first()
+    total_facturado = fletes_qs.filter(estado="finalizado").aggregate(total=Sum("precio"))["total"] or 0
+    total_cobrado = fletes_qs.filter(estado="finalizado", estado_cobro_cliente="cobrado").aggregate(total=Sum("precio"))["total"] or 0
+    total_pendiente = fletes_qs.filter(estado="finalizado", estado_cobro_cliente="pendiente").aggregate(total=Sum("precio"))["total"] or 0
+
+    return render(request, "core/detalle_cliente.html", {
+        "cliente": cliente,
+        "total_fletes": total_fletes,
+        "total_finalizados": total_finalizados,
+        "ultimo_flete": ultimo_flete,
+        "total_facturado": total_facturado,
+        "total_cobrado": total_cobrado,
+        "total_pendiente": total_pendiente,
+        "ultimas_direcciones": _direcciones_cliente(cliente, limite=10),
+        "ultimos_fletes": ultimos_fletes,
+    })
+
+
 def lista_choferes(request):
     choferes = Chofer.objects.all()
     estado = request.GET.get("estado")
@@ -597,6 +621,32 @@ def editar_chofer(request, chofer_id):
         "chofer": chofer,
         "titulo": f"Editar chofer #{chofer.id}",
         "texto_boton": "Guardar cambios",
+    })
+
+
+def detalle_chofer(request, chofer_id):
+    chofer = get_object_or_404(Chofer, id=chofer_id)
+    fletes_qs = Flete.objects.select_related("cliente").filter(chofer=chofer).order_by("-fecha", "-hora_inicio", "-id")
+    ultimos_fletes = list(fletes_qs[:10])
+    total_fletes = fletes_qs.count()
+    total_finalizados = fletes_qs.filter(estado="finalizado").count()
+    ultimo_flete = fletes_qs.first()
+    fletes_finalizados = list(fletes_qs.filter(estado="finalizado"))
+    total_producido = sum((flete.precio for flete in fletes_finalizados), Decimal("0"))
+    total_a_pagar = _sumar_importe_chofer(fletes_finalizados)
+    total_pagado = _sumar_importe_chofer([flete for flete in fletes_finalizados if flete.estado_pago_chofer == "liquidado"])
+    total_pendiente = _sumar_importe_chofer([flete for flete in fletes_finalizados if flete.estado_pago_chofer == "pendiente"])
+
+    return render(request, "core/detalle_chofer.html", {
+        "chofer": chofer,
+        "total_fletes": total_fletes,
+        "total_finalizados": total_finalizados,
+        "ultimo_flete": ultimo_flete,
+        "total_producido": total_producido,
+        "total_a_pagar": total_a_pagar,
+        "total_pagado": total_pagado,
+        "total_pendiente": total_pendiente,
+        "ultimos_fletes": ultimos_fletes,
     })
 
 

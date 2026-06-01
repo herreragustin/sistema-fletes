@@ -1,0 +1,98 @@
+{% extends "core/base_panel.html" %}
+
+{% block title %}Ficha del chofer{% endblock %}
+
+{% block content %}
+<h1>{{ chofer.nombre }}</h1>
+
+<div class="acciones">
+    <a href="{% url 'editar_chofer' chofer.id %}">Editar chofer</a>
+    <a href="{% url 'detalle_liquidacion_chofer' chofer.id %}" class="secundario">Liquidacion</a>
+    <a href="{% url 'lista_fletes' %}?chofer={{ chofer.id }}" class="secundario">Ver todos los fletes de este chofer</a>
+    <a href="{% url 'lista_choferes' %}" class="secundario">Volver</a>
+</div>
+
+<div class="dashboard-bloque">
+    <h2>Historial del chofer</h2>
+    <div class="resumen-total">
+        <div>
+            <span>Total de fletes</span>
+            <strong>{{ total_fletes }}</strong>
+        </div>
+        <div>
+            <span>Fletes finalizados</span>
+            <strong>{{ total_finalizados }}</strong>
+        </div>
+        <div>
+            <span>Total producido</span>
+            <strong>${{ total_producido|miles_punto }}</strong>
+        </div>
+        <div>
+            <span>Total a pagar</span>
+            <strong>${{ total_a_pagar|miles_punto }}</strong>
+        </div>
+        <div>
+            <span>Total pagado</span>
+            <strong>${{ total_pagado|miles_punto }}</strong>
+        </div>
+        <div>
+            <span>Total pendiente</span>
+            <strong>${{ total_pendiente|miles_punto }}</strong>
+        </div>
+    </div>
+
+    <p>
+        <strong>Ultimo flete realizado:</strong>
+        {% if ultimo_flete %}
+            {{ ultimo_flete.fecha }}{% if ultimo_flete.cliente %} | {{ ultimo_flete.cliente.nombre }}{% endif %}
+        {% else %}
+            -
+        {% endif %}
+    </p>
+    <p>
+        <strong>Porcentaje de liquidacion:</strong>
+        {% if chofer.porcentaje_liquidacion == 60 %}
+            <span class="estado">{{ chofer.porcentaje_liquidacion }}%</span>
+        {% else %}
+            <span class="estado excepcion">{{ chofer.porcentaje_liquidacion }}%</span>
+        {% endif %}
+    </p>
+    <p><strong>Tipo de liquidacion:</strong> {{ chofer.get_tipo_liquidacion_display }}</p>
+</div>
+
+<div class="dashboard-bloque">
+    <h2>Ultimos fletes del chofer</h2>
+    {% if ultimos_fletes %}
+    <table>
+        <thead>
+            <tr>
+                <th>Fecha</th>
+                <th>Estado</th>
+                <th>Cliente</th>
+                <th>Origen</th>
+                <th>Destino</th>
+                <th>Precio cliente</th>
+                <th>Importe chofer</th>
+                <th>Estado de pago</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for flete in ultimos_fletes %}
+            <tr>
+                <td>{{ flete.fecha }}</td>
+                <td><span class="estado {{ flete.estado }}">{{ flete.get_estado_display }}</span></td>
+                <td>{{ flete.cliente.nombre|default:"-" }}</td>
+                <td>{{ flete.direccion_origen }}</td>
+                <td>{{ flete.direccion_destino }}</td>
+                <td>${{ flete.precio|miles_punto }}</td>
+                <td>${{ flete.importe_chofer|miles_punto }}</td>
+                <td><span class="estado {{ flete.estado_pago_chofer }}">{{ flete.get_estado_pago_chofer_display }}</span></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="sin-datos">Este chofer todavia no tiene fletes cargados.</div>
+    {% endif %}
+</div>
+{% endblock %}

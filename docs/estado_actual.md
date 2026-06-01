@@ -49,6 +49,7 @@ Base tecnica actual:
 - solo incluye viajes con `forma_de_pago = cuenta_corriente`
 - resumen por cliente
 - detalle por cliente
+- ficha de cliente con historial operativo
 - filtros por periodo
 - cierre simple de cobranza
 - indicadores visuales de cierre disponible
@@ -60,6 +61,7 @@ Base tecnica actual:
   - mensual
 - porcentaje de liquidacion por chofer
 - importe del chofer calculado dinamicamente
+- ficha de chofer con historial operativo
 - cierre simple de liquidacion
 - fallback al ultimo periodo con movimientos
 - indicadores visuales de cierre disponible
@@ -93,4 +95,3 @@ Base tecnica actual:
 - validaciones adicionales
 - cierres mas formales o historicos
 - mejoras administrativas y de UX fina
-
