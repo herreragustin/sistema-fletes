@@ -9,7 +9,21 @@
     <a href="{% url 'crear_flete' %}">Nuevo flete</a>
 </div>
 
+<div class="filtros-rapidos">
+    {% for filtro_rapido in filtros_rapidos %}
+        <a
+            href="{% url 'lista_fletes' %}{% if filtro_rapido.querystring %}?{{ filtro_rapido.querystring }}{% endif %}"
+            class="filtro-rapido{% if filtro_rapido.activo %} activo{% endif %}"
+        >
+            {{ filtro_rapido.label }}
+        </a>
+    {% endfor %}
+</div>
+
 <form method="get" class="filtros">
+    {% if filtros.filtro %}
+        <input type="hidden" name="filtro" value="{{ filtros.filtro }}">
+    {% endif %}
     <div class="filtros-campo">
         <label>Fecha</label>
         <input type="date" name="fecha" value="{{ filtros.fecha }}">
@@ -95,6 +109,6 @@
     </tbody>
 </table>
 {% else %}
-<div class="sin-datos">No hay fletes cargados.</div>
+<div class="sin-datos">No hay fletes para los filtros seleccionados.</div>
 {% endif %}
 {% endblock %}

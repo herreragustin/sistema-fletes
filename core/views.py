@@ -1,5 +1,6 @@
 from datetime import timedelta
 from decimal import Decimal
+from urllib.parse import urlencode
 
 from django.db.models import Count, DecimalField, Q, Sum, Value
 from django.db.models.functions import Coalesce
@@ -161,11 +162,25 @@ def lista_fletes(request):
     fletes = Flete.objects.select_related("cliente", "chofer").all()
 
     # filtros
+    filtro_rapido = request.GET.get("filtro")
     fecha = request.GET.get("fecha")
     estado = request.GET.get("estado")
     cliente = request.GET.get("cliente")
     chofer = request.GET.get("chofer")
     forma_de_pago = request.GET.get("forma_de_pago")
+
+    if filtro_rapido == "hoy":
+        fletes = fletes.filter(fecha=timezone.localdate())
+    elif filtro_rapido == "pendientes":
+        fletes = fletes.filter(estado="pendiente")
+    elif filtro_rapido == "en_curso":
+        fletes = fletes.filter(estado="en_curso")
+    elif filtro_rapido == "finalizados":
+        fletes = fletes.filter(estado="finalizado")
+    elif filtro_rapido == "cancelados":
+        fletes = fletes.filter(estado="cancelado")
+    elif filtro_rapido == "sin_chofer":
+        fletes = fletes.filter(chofer__isnull=True)
 
     if fecha:
         fletes = fletes.filter(fecha=fecha)
@@ -184,18 +199,45 @@ def lista_fletes(request):
 
     fletes = fletes.order_by("-fecha", "-hora_inicio")
 
+    filtros_actuales = {
+        "filtro": filtro_rapido,
+        "fecha": fecha,
+        "estado": estado,
+        "cliente": cliente,
+        "chofer": chofer,
+        "forma_de_pago": forma_de_pago,
+    }
+
+    base_params = request.GET.copy()
+    filtros_rapidos = []
+    for value, label in [
+        ("", "Todos"),
+        ("hoy", "Hoy"),
+        ("pendientes", "Pendientes"),
+        ("en_curso", "En curso"),
+        ("finalizados", "Finalizados"),
+        ("cancelados", "Cancelados"),
+        ("sin_chofer", "Sin chofer asignado"),
+    ]:
+        params = base_params.copy()
+        if value:
+            params["filtro"] = value
+        else:
+            params.pop("filtro", None)
+        filtros_rapidos.append({
+            "label": label,
+            "value": value,
+            "querystring": urlencode([(key, item) for key, values in params.lists() for item in values]),
+            "activo": (filtro_rapido or "") == value,
+        })
+
     context = {
         "fletes": fletes,
         "clientes": Cliente.objects.order_by("nombre"),
         "choferes": Chofer.objects.order_by("nombre"),
         "formas_de_pago": Flete.FORMA_DE_PAGO,
-        "filtros": {
-            "fecha": fecha,
-            "estado": estado,
-            "cliente": cliente,
-            "chofer": chofer,
-            "forma_de_pago": forma_de_pago,
-        }
+        "filtros": filtros_actuales,
+        "filtros_rapidos": filtros_rapidos,
     }
 
     return render(request, "core/lista_fletes_panel.html", context)
