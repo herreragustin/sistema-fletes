@@ -282,6 +282,28 @@ def crear_flete(request):
     })
 
 
+def duplicar_flete(request, flete_id):
+    flete = get_object_or_404(Flete, id=flete_id)
+    form = FleteForm(initial={
+        "cliente": flete.cliente_id,
+        "chofer": flete.chofer_id,
+        "fecha": timezone.localdate(),
+        "hora_inicio": flete.hora_inicio,
+        "direccion_origen": flete.direccion_origen,
+        "direccion_destino": flete.direccion_destino,
+        "ayudantes": flete.ayudantes,
+        "precio": flete.precio,
+        "forma_de_pago": flete.forma_de_pago,
+        "estado": "pendiente",
+    })
+
+    return render(request, "core/formulario_flete.html", {
+        "form": form,
+        "titulo": f"Duplicar flete #{flete.id}",
+        "texto_boton": "Crear flete",
+    })
+
+
 def direcciones_cliente(request, cliente_id):
     cliente = get_object_or_404(Cliente, id=cliente_id)
     return JsonResponse({"direcciones": _direcciones_cliente(cliente)})

@@ -1,4 +1,5 @@
 <a href="{% url 'editar_flete' flete.id %}">Editar</a>
+<a href="{% url 'duplicar_flete' flete.id %}">Duplicar</a>
 
 {% if flete.estado == "pendiente" %}
     <form method="post" action="{% url 'cambiar_estado_flete' flete.id 'en_curso' %}">
