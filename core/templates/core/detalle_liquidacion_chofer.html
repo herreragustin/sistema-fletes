@@ -56,7 +56,7 @@
 
 {% if pendientes_periodo_count %}
     <div class="acciones">
-        <form method="post" action="{% url 'cerrar_liquidacion_chofer' chofer.id %}" onsubmit="return confirm('Se marcaran como pagados {{ pendientes_periodo_count }} viajes pendientes por un total de ${{ total_pendiente_periodo|miles_punto }}.');">
+        <form method="post" action="{% url 'cerrar_liquidacion_chofer' chofer.id %}" onsubmit="return confirm('Seguro que queres cerrar esta liquidacion y marcar {{ pendientes_periodo_count }} viajes pendientes como pagados por un total de ${{ total_pendiente_periodo|miles_punto }}?');">
             {% csrf_token %}
             <input type="hidden" name="fecha_desde" value="{{ filtros.fecha_desde|default_if_none:'' }}">
             <input type="hidden" name="fecha_hasta" value="{{ filtros.fecha_hasta|default_if_none:'' }}">
