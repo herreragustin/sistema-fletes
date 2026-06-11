@@ -3,6 +3,7 @@
 ## Estado general
 
 El proyecto se encuentra funcional y usable para operacion diaria en entorno local.
+Quedo preparado para comenzar carga de datos reales luego de limpiar la base demo.
 
 Base tecnica actual:
 - Django
@@ -87,6 +88,7 @@ Base tecnica actual:
 - liquidacion de choferes
 - cierres simples
 - navegacion principal
+- backup previo a limpieza de datos demo
 
 ## Partes pendientes o mejorables
 
