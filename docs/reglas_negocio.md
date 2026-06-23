@@ -46,6 +46,9 @@ Reglas:
 - si es cuenta corriente, al finalizar queda pendiente de cobro
 - al marcar un cobro como `pendiente`, se limpia la fecha de cobro
 - al volver a marcarlo como `cobrado`, se registra una nueva fecha y hora actual
+- un flete solo conserva informacion de cobro mientras esta `finalizado`
+- si vuelve a `pendiente`, `en_curso` o `cancelado`, se limpia la fecha de cobro del cliente
+- al finalizar nuevamente, el cobro se vuelve a generar segun la forma de pago
 
 ## Cuenta corriente
 

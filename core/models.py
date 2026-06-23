@@ -261,6 +261,14 @@ class Flete(models.Model):
             else:
                 cobro.fecha_pago = None
             cobro.save()
+        else:
+            cobro = Cobro.objects.filter(flete=self).first()
+            if cobro:
+                cobro.monto = self.precio
+                cobro.metodo_pago = self.forma_de_pago or cobro.metodo_pago or "efectivo"
+                cobro.estado = "cancelado" if self.estado == "cancelado" else "pendiente"
+                cobro.fecha_pago = None
+                cobro.save(update_fields=["monto", "metodo_pago", "estado", "fecha_pago"])
 
         if hasattr(self, "_fecha_cobro_forzada"):
             delattr(self, "_fecha_cobro_forzada")
@@ -295,6 +303,8 @@ class Flete(models.Model):
 
     @property
     def fecha_cobro_cliente(self):
+        if self.estado != "finalizado":
+            return None
         try:
             return self.cobro.fecha_pago
         except Cobro.DoesNotExist:
