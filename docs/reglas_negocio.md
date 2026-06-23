@@ -44,6 +44,8 @@ Formas de pago:
 Reglas:
 - si es efectivo, al finalizar queda cobrado
 - si es cuenta corriente, al finalizar queda pendiente de cobro
+- al marcar un cobro como `pendiente`, se limpia la fecha de cobro
+- al volver a marcarlo como `cobrado`, se registra una nueva fecha y hora actual
 
 ## Cuenta corriente
 

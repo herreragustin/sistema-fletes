@@ -185,16 +185,18 @@ class Flete(models.Model):
 
     def save(self, *args, **kwargs):
         estado_anterior = None
+        estado_cobro_anterior = None
         if self.pk:
-            estado_anterior = (
+            estado_anterior, estado_cobro_anterior = (
                 Flete.objects
                 .filter(pk=self.pk)
-                .values_list("estado", flat=True)
+                .values_list("estado", "estado_cobro_cliente")
                 .first()
             )
 
         ahora = timezone.now()
         usar_horarios_manuales = getattr(self, "_usar_horarios_manuales", False)
+        fecha_cobro_forzada = getattr(self, "_fecha_cobro_forzada", None)
 
         if self.estado == "pendiente":
             self.fecha_hora_en_curso = None
@@ -234,13 +236,14 @@ class Flete(models.Model):
             delattr(self, "_usar_horarios_manuales")
 
         if self.estado == "finalizado":
+            fecha_cobro_default = fecha_cobro_forzada or ahora
             cobro, created = Cobro.objects.get_or_create(
                 flete=self,
                 defaults={
                     "monto": self.precio,
                     "metodo_pago": self.forma_de_pago or "efectivo",
                     "estado": "pagado" if self.estado_cobro_cliente == "cobrado" else "pendiente",
-                    "fecha_pago": timezone.now() if self.estado_cobro_cliente == "cobrado" else None,
+                    "fecha_pago": fecha_cobro_default if self.estado_cobro_cliente == "cobrado" else None,
                 },
             )
             cobro.monto = self.precio
@@ -251,10 +254,16 @@ class Flete(models.Model):
                 "cancelado": "cancelado",
             }.get(self.estado_cobro_cliente, "pendiente")
             if cobro.estado == "pagado":
-                cobro.fecha_pago = cobro.fecha_pago or timezone.now()
+                if fecha_cobro_forzada is not None:
+                    cobro.fecha_pago = fecha_cobro_forzada
+                elif created or estado_cobro_anterior != "cobrado" or cobro.fecha_pago is None:
+                    cobro.fecha_pago = ahora
             else:
                 cobro.fecha_pago = None
             cobro.save()
+
+        if hasattr(self, "_fecha_cobro_forzada"):
+            delattr(self, "_fecha_cobro_forzada")
 
     @property
     def duracion(self):
@@ -301,21 +310,14 @@ class Flete(models.Model):
     def registrar_cobro_cliente(self, estado_cobro, observaciones=None, fecha_pago=None):
         self.estado_cobro_cliente = estado_cobro
         self.pagado = estado_cobro == "cobrado"
+        if estado_cobro == "cobrado":
+            self._fecha_cobro_forzada = fecha_pago or timezone.now()
         self.save(update_fields=["estado_cobro_cliente", "pagado"])
 
-        cobro = self.cobro
-        campos_cobro = ["estado", "fecha_pago"]
-
-        if estado_cobro == "cobrado":
-            cobro.fecha_pago = fecha_pago or cobro.fecha_pago or timezone.now()
-        else:
-            cobro.fecha_pago = None
-
         if observaciones is not None:
+            cobro = self.cobro
             cobro.observaciones = observaciones.strip() or None
-            campos_cobro.append("observaciones")
-
-        cobro.save(update_fields=campos_cobro)
+            cobro.save(update_fields=["observaciones"])
 
     def registrar_pago_chofer(self, estado_pago, observaciones=None, fecha_pago=None):
         self.estado_pago_chofer = estado_pago
