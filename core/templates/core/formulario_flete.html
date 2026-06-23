@@ -74,6 +74,19 @@
         {{ form.estado }}
         {% if form.estado.errors %}{{ form.estado.errors }}{% endif %}
     </p>
+    <div id="bloque-horarios-finalizado">
+        <p class="muted">Usar estos campos si el flete ya fue realizado y se esta cargando despues.</p>
+        <p>
+            {{ form.hora_comienzo.label_tag }}
+            {{ form.hora_comienzo }}
+            {% if form.hora_comienzo.errors %}{{ form.hora_comienzo.errors }}{% endif %}
+        </p>
+        <p>
+            {{ form.hora_finalizacion.label_tag }}
+            {{ form.hora_finalizacion }}
+            {% if form.hora_finalizacion.errors %}{{ form.hora_finalizacion.errors }}{% endif %}
+        </p>
+    </div>
 
     <div class="acciones">
         <button type="submit">{{ texto_boton }}</button>
@@ -84,13 +97,15 @@
 <script>
 (() => {
     const clienteSelect = document.getElementById("id_cliente");
+    const estadoSelect = document.getElementById("id_estado");
     const origenInput = document.getElementById("id_direccion_origen");
     const destinoInput = document.getElementById("id_direccion_destino");
     const origenSugerencias = document.getElementById("sugerencias_origen");
     const destinoSugerencias = document.getElementById("sugerencias_destino");
+    const bloqueHorariosFinalizado = document.getElementById("bloque-horarios-finalizado");
     const baseDireccionesUrl = "{% url 'direcciones_cliente' 0 %}";
 
-    if (!clienteSelect || !origenInput || !destinoInput || !origenSugerencias || !destinoSugerencias) {
+    if (!clienteSelect || !estadoSelect || !origenInput || !destinoInput || !origenSugerencias || !destinoSugerencias || !bloqueHorariosFinalizado) {
         return;
     }
 
@@ -170,6 +185,11 @@
         });
     };
 
+    const actualizarBloqueHorarios = () => {
+        const visible = estadoSelect.value === "finalizado";
+        bloqueHorariosFinalizado.style.display = visible ? "block" : "none";
+    };
+
     document.addEventListener("click", (event) => {
         if (!event.target.closest(".campo-autocomplete")) {
             ocultarSugerencias(origenSugerencias);
@@ -180,7 +200,9 @@
     vincularAutocomplete(origenInput, origenSugerencias);
     vincularAutocomplete(destinoInput, destinoSugerencias);
     clienteSelect.addEventListener("change", () => cargarDirecciones(clienteSelect.value));
+    estadoSelect.addEventListener("change", actualizarBloqueHorarios);
     cargarDirecciones(clienteSelect.value);
+    actualizarBloqueHorarios();
 })();
 </script>
 {% endblock %}

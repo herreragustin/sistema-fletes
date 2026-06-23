@@ -1,4 +1,7 @@
+from datetime import datetime
+
 from django import forms
+from django.utils import timezone
 from django.db.models import Q
 
 from .models import Cliente, Chofer, Flete
@@ -44,6 +47,17 @@ class ChoferForm(forms.ModelForm):
 
 
 class FleteForm(forms.ModelForm):
+    hora_comienzo = forms.TimeField(
+        required=False,
+        label="Hora de comienzo",
+        widget=forms.TimeInput(format="%H:%M", attrs={"type": "time"}),
+    )
+    hora_finalizacion = forms.TimeField(
+        required=False,
+        label="Hora de finalizacion",
+        widget=forms.TimeInput(format="%H:%M", attrs={"type": "time"}),
+    )
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -59,9 +73,16 @@ class FleteForm(forms.ModelForm):
         self.fields["cliente"].error_messages["required"] = "Debe seleccionar un cliente"
         self.fields["chofer"].error_messages["required"] = "Debe seleccionar un chofer"
         self.fields["fecha"].error_messages["required"] = "Debe ingresar una fecha"
+        self.fields["hora_inicio"].label = "Hora programada"
         self.fields["direccion_origen"].error_messages["required"] = "Debe ingresar un origen"
         self.fields["direccion_destino"].error_messages["required"] = "Debe ingresar un destino"
         self.fields["precio"].error_messages["required"] = "Debe ingresar un precio"
+
+        if self.instance.pk:
+            if self.instance.fecha_hora_en_curso:
+                self.initial["hora_comienzo"] = timezone.localtime(self.instance.fecha_hora_en_curso).strftime("%H:%M")
+            if self.instance.fecha_hora_finalizado:
+                self.initial["hora_finalizacion"] = timezone.localtime(self.instance.fecha_hora_finalizado).strftime("%H:%M")
 
     class Meta:
         model = Flete
@@ -91,6 +112,9 @@ class FleteForm(forms.ModelForm):
         destino = (cleaned_data.get("direccion_destino") or "").strip()
         precio = cleaned_data.get("precio")
         estado = cleaned_data.get("estado")
+        hora_comienzo = cleaned_data.get("hora_comienzo")
+        hora_finalizacion = cleaned_data.get("hora_finalizacion")
+        estado_anterior = self.instance.estado if self.instance and self.instance.pk else None
 
         if "cliente" not in self.errors and not cliente:
             self.add_error("cliente", "Debe seleccionar un cliente")
@@ -121,4 +145,51 @@ class FleteForm(forms.ModelForm):
             if precio is None or precio <= 0:
                 self.add_error("precio", "No se puede finalizar un flete con precio menor o igual a cero")
 
+            requiere_horarios_manuales = (
+                estado_anterior != "finalizado"
+                and not self.instance.fecha_hora_en_curso
+                and not self.instance.fecha_hora_finalizado
+            )
+
+            if hora_comienzo and not hora_finalizacion:
+                self.add_error("hora_finalizacion", "Debe ingresar la hora de finalizacion")
+            if hora_finalizacion and not hora_comienzo:
+                self.add_error("hora_comienzo", "Debe ingresar la hora de comienzo")
+
+            if requiere_horarios_manuales and not hora_comienzo:
+                self.add_error(
+                    "hora_comienzo",
+                    "Debe ingresar la hora de comienzo para cargar un flete ya finalizado",
+                )
+            if requiere_horarios_manuales and not hora_finalizacion:
+                self.add_error(
+                    "hora_finalizacion",
+                    "Debe ingresar la hora de finalizacion para cargar un flete ya finalizado",
+                )
+
+            if fecha and hora_comienzo and hora_finalizacion:
+                inicio_dt = timezone.make_aware(datetime.combine(fecha, hora_comienzo))
+                fin_dt = timezone.make_aware(datetime.combine(fecha, hora_finalizacion))
+                if inicio_dt >= fin_dt:
+                    self.add_error("hora_finalizacion", "La hora de finalizacion debe ser posterior a la hora de comienzo")
+                else:
+                    cleaned_data["fecha_hora_en_curso_manual"] = inicio_dt
+                    cleaned_data["fecha_hora_finalizado_manual"] = fin_dt
+
         return cleaned_data
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+
+        fecha_hora_en_curso_manual = self.cleaned_data.get("fecha_hora_en_curso_manual")
+        fecha_hora_finalizado_manual = self.cleaned_data.get("fecha_hora_finalizado_manual")
+
+        if fecha_hora_en_curso_manual and fecha_hora_finalizado_manual:
+            instance.fecha_hora_en_curso = fecha_hora_en_curso_manual
+            instance.fecha_hora_finalizado = fecha_hora_finalizado_manual
+
+        if commit:
+            instance.save()
+            self.save_m2m()
+
+        return instance

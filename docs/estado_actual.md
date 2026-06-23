@@ -40,6 +40,7 @@ Base tecnica actual:
 - guarda inicio real al pasar a `en_curso`
 - guarda finalizacion real al pasar a `finalizado`
 - calcula duracion
+- permite cargar manualmente hora de comienzo y finalizacion cuando un flete se registra despues de haber sido realizado
 
 ### Cobro a clientes
 - facturacion basada en fletes finalizados

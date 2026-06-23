@@ -15,6 +15,14 @@ Cuando pasa a `finalizado`:
 - guarda fecha y hora real de finalizacion
 - queda disponible en Facturacion
 
+Carga operativa:
+- si el flete se carga en tiempo real, el sistema sigue guardando los horarios automaticamente al cambiar de estado
+- si el flete ya fue realizado y se carga directamente como `finalizado`, el usuario debe ingresar:
+  - hora de comienzo
+  - hora de finalizacion
+- en ese caso ambos horarios se guardan sobre la fecha del flete y se usan para calcular la duracion
+- la hora de finalizacion debe ser posterior a la hora de comienzo
+
 ## Cobro a clientes
 
 Cada flete tiene:
@@ -97,4 +105,3 @@ La Home responde a:
 - cuales fueron los ultimos fletes cargados
 
 No busca ser un dashboard complejo.
-
