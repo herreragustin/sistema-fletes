@@ -194,10 +194,21 @@ class Flete(models.Model):
             )
 
         ahora = timezone.now()
-        if self.estado == "en_curso" and estado_anterior != "en_curso" and not self.fecha_hora_en_curso:
+        usar_horarios_manuales = getattr(self, "_usar_horarios_manuales", False)
+
+        if self.estado == "pendiente":
+            self.fecha_hora_en_curso = None
+            self.fecha_hora_finalizado = None
+        elif self.estado == "en_curso":
             self.fecha_hora_en_curso = ahora
-        if self.estado == "finalizado" and estado_anterior != "finalizado" and not self.fecha_hora_finalizado:
-            self.fecha_hora_finalizado = ahora
+            self.fecha_hora_finalizado = None
+        elif self.estado == "finalizado":
+            if usar_horarios_manuales:
+                if self.fecha_hora_en_curso and self.fecha_hora_finalizado and self.fecha_hora_finalizado < self.fecha_hora_en_curso:
+                    self.fecha_hora_finalizado = self.fecha_hora_en_curso
+            else:
+                self.fecha_hora_en_curso = self.fecha_hora_en_curso or ahora
+                self.fecha_hora_finalizado = ahora
 
         # Separamos la deuda del cliente de la futura liquidacion del chofer.
         if self.estado == "finalizado":
@@ -218,6 +229,9 @@ class Flete(models.Model):
         self.pagado = self.estado_cobro_cliente == "cobrado"
 
         super().save(*args, **kwargs)
+
+        if hasattr(self, "_usar_horarios_manuales"):
+            delattr(self, "_usar_horarios_manuales")
 
         if self.estado == "finalizado":
             cobro, created = Cobro.objects.get_or_create(

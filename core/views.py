@@ -348,9 +348,9 @@ def cambiar_estado_flete(request, flete_id, estado):
     flete = get_object_or_404(Flete, id=flete_id)
     transiciones_validas = {
         "pendiente": {"en_curso", "cancelado"},
-        "en_curso": {"finalizado", "cancelado"},
-        "cancelado": {"pendiente"},
-        "finalizado": set(),
+        "en_curso": {"pendiente", "finalizado", "cancelado"},
+        "cancelado": {"pendiente", "en_curso"},
+        "finalizado": {"en_curso", "pendiente", "cancelado"},
     }
 
     if estado in transiciones_validas.get(flete.estado, set()):

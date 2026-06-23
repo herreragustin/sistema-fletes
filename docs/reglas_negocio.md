@@ -10,10 +10,18 @@ Flujo actual:
 
 Cuando pasa a `en_curso`:
 - guarda fecha y hora real de inicio
+- si se vuelve a poner en `en_curso`, reinicia ese horario real con el ultimo cambio valido
+- al volver a `en_curso`, limpia la fecha y hora de finalizacion anterior
 
 Cuando pasa a `finalizado`:
 - guarda fecha y hora real de finalizacion
 - queda disponible en Facturacion
+- si se vuelve a finalizar despues de una correccion, actualiza nuevamente la finalizacion y recalcula la duracion
+
+Cuando vuelve a `pendiente`:
+- limpia fecha y hora real de inicio
+- limpia fecha y hora real de finalizacion
+- deja la duracion sin datos
 
 Carga operativa:
 - si el flete se carga en tiempo real, el sistema sigue guardando los horarios automaticamente al cambiar de estado

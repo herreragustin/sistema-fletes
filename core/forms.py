@@ -187,6 +187,7 @@ class FleteForm(forms.ModelForm):
         if fecha_hora_en_curso_manual and fecha_hora_finalizado_manual:
             instance.fecha_hora_en_curso = fecha_hora_en_curso_manual
             instance.fecha_hora_finalizado = fecha_hora_finalizado_manual
+            instance._usar_horarios_manuales = True
 
         if commit:
             instance.save()
