@@ -181,6 +181,19 @@
                                 <td class="acciones-tabla">
                                     <a href="{% url 'editar_flete' flete.id %}">Editar</a>
                                     <a href="{% url 'duplicar_flete' flete.id %}" onclick="return confirm('Queres duplicar este flete y abrir uno nuevo prellenado?');">Duplicar</a>
+                                    {% if flete.estado == "pendiente" %}
+                                        <form method="post" action="{% url 'cambiar_estado_flete' flete.id 'en_curso' %}">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="next" value="{{ request.path }}">
+                                            <button type="submit">En curso</button>
+                                        </form>
+                                    {% elif flete.estado == "en_curso" %}
+                                        <form method="post" action="{% url 'cambiar_estado_flete' flete.id 'finalizado' %}" onsubmit="return confirm('Seguro que queres finalizar este flete? Esta accion puede impactar en facturacion.');">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="next" value="{{ request.path }}">
+                                            <button type="submit" class="btn-exito">Finalizar</button>
+                                        </form>
+                                    {% endif %}
                                 </td>
                             </tr>
                         {% endfor %}
@@ -235,6 +248,19 @@
                                 <td class="acciones-tabla">
                                     <a href="{% url 'editar_flete' flete.id %}">Editar</a>
                                     <a href="{% url 'duplicar_flete' flete.id %}" onclick="return confirm('Queres duplicar este flete y abrir uno nuevo prellenado?');">Duplicar</a>
+                                    {% if flete.estado == "pendiente" %}
+                                        <form method="post" action="{% url 'cambiar_estado_flete' flete.id 'en_curso' %}">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="next" value="{{ request.path }}">
+                                            <button type="submit">En curso</button>
+                                        </form>
+                                    {% elif flete.estado == "en_curso" %}
+                                        <form method="post" action="{% url 'cambiar_estado_flete' flete.id 'finalizado' %}" onsubmit="return confirm('Seguro que queres finalizar este flete? Esta accion puede impactar en facturacion.');">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="next" value="{{ request.path }}">
+                                            <button type="submit" class="btn-exito">Finalizar</button>
+                                        </form>
+                                    {% endif %}
                                 </td>
                             </tr>
                         {% endfor %}
