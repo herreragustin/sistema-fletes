@@ -81,8 +81,15 @@
             <div class="lista-resumen">
                 {% for flete in fletes_hoy %}
                     <div class="lista-resumen-item">
-                        <strong>{{ flete.hora_inicio }} - {{ flete.cliente.nombre }}</strong><br>
-                        <span class="muted">{{ flete.chofer.nombre }} | {{ flete.direccion_origen }} a {{ flete.direccion_destino }} | <span class="estado {{ flete.estado }}">{{ flete.get_estado_display }}</span></span>
+                        <strong>{{ flete.hora_inicio|time:"H:i"|default:"-" }} - {{ flete.cliente.nombre }}</strong><br>
+                        <span class="muted">
+                            {{ flete.chofer.nombre|default:"Sin chofer" }} |
+                            {{ flete.direccion_origen }} a {{ flete.direccion_destino }} |
+                            <span class="estado {{ flete.estado }}">{{ flete.get_estado_display }}</span>
+                            {% if flete.fecha_hora_en_curso %}
+                                | Inicio real {{ flete.fecha_hora_en_curso|date:"H:i" }}
+                            {% endif %}
+                        </span>
                     </div>
                 {% endfor %}
             </div>

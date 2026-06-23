@@ -30,6 +30,11 @@ Base tecnica actual:
 - alta y edicion de choferes
 - alta y edicion de fletes
 - filtros en listados
+- listado de Fletes con informacion operativa ampliada:
+  - horarios reales
+  - duracion
+  - estado de cobro
+  - fecha de cobro
 - estados de flete:
   - pendiente
   - en_curso
@@ -41,6 +46,7 @@ Base tecnica actual:
 - guarda finalizacion real al pasar a `finalizado`
 - calcula duracion
 - permite cargar manualmente hora de comienzo y finalizacion cuando un flete se registra despues de haber sido realizado
+- los fletes en curso ya muestran la hora de inicio real en los listados operativos
 
 ### Cobro a clientes
 - facturacion basada en fletes finalizados
@@ -73,6 +79,7 @@ Base tecnica actual:
 - cobranzas pendientes
 - liquidaciones pendientes
 - fletes de hoy
+- bloque visible de fletes del dia con estado e inicio real si ya comenzo
 - ultimos fletes cargados
 - accesos rapidos
 

@@ -84,35 +84,46 @@
 </form>
 
 {% if fletes %}
+<div class="tabla-scroll">
 <table>
     <thead>
         <tr>
             <th>Fecha</th>
-            <th>Hora</th>
+            <th>Hora programada</th>
             <th>Cliente</th>
             <th>Chofer</th>
             <th>Origen</th>
             <th>Destino</th>
             <th>Ayudantes</th>
-            <th>Precio</th>
+            <th>Importe</th>
             <th>Forma de pago</th>
-            <th>Estado</th>
+            <th>Hora en curso</th>
+            <th>Hora finalizado</th>
+            <th>Duracion</th>
+            <th>Estado flete</th>
+            <th>Estado cobro</th>
+            <th>Fecha cobro</th>
             <th>Acciones</th>
         </tr>
     </thead>
     <tbody>
         {% for flete in fletes %}
         <tr>
-            <td>{{ flete.fecha }}</td>
-            <td>{{ flete.hora_inicio }}</td>
+            <td>{{ flete.fecha|date:"d/m/Y" }}</td>
+            <td>{{ flete.hora_inicio|time:"H:i"|default:"-" }}</td>
             <td>{{ flete.cliente.nombre }}</td>
             <td>{{ flete.chofer.nombre }}</td>
             <td>{{ flete.direccion_origen }}</td>
             <td>{{ flete.direccion_destino }}</td>
-            <td>{{ flete.ayudantes }}</td>
+            <td>{{ flete.ayudantes|default:"-" }}</td>
             <td>${{ flete.precio|miles_punto }}</td>
             <td>{{ flete.get_forma_de_pago_display|default:"Sin definir" }}</td>
+            <td>{{ flete.fecha_hora_en_curso|date:"d/m/Y H:i"|default:"-" }}</td>
+            <td>{{ flete.fecha_hora_finalizado|date:"d/m/Y H:i"|default:"-" }}</td>
+            <td>{{ flete.duracion_formateada|default:"-" }}</td>
             <td><span class="estado {{ flete.estado }}">{{ flete.get_estado_display }}</span></td>
+            <td><span class="estado {{ flete.estado_cobro_cliente }}">{{ flete.get_estado_cobro_cliente_display }}</span></td>
+            <td>{{ flete.fecha_cobro_cliente|date:"d/m/Y H:i"|default:"-" }}</td>
             <td class="acciones-tabla">
                 {% include "core/acciones_estado_flete.html" %}
             </td>
@@ -120,6 +131,7 @@
         {% endfor %}
     </tbody>
 </table>
+</div>
 {% else %}
 <div class="sin-datos">No hay fletes para los filtros seleccionados.</div>
 {% endif %}
