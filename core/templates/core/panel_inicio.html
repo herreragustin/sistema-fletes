@@ -179,7 +179,8 @@
                                 <td><span class="estado {{ flete.estado_cobro_cliente }}">{{ flete.get_estado_cobro_cliente_display }}</span></td>
                                 <td>{{ flete.fecha_cobro_cliente|date:"d/m/Y H:i"|default:"-" }}</td>
                                 <td class="acciones-tabla">
-                                    {% include "core/acciones_estado_flete.html" %}
+                                    <a href="{% url 'editar_flete' flete.id %}">Editar</a>
+                                    <a href="{% url 'duplicar_flete' flete.id %}" onclick="return confirm('Queres duplicar este flete y abrir uno nuevo prellenado?');">Duplicar</a>
                                 </td>
                             </tr>
                         {% endfor %}
@@ -232,7 +233,8 @@
                                 <td>{{ flete.get_forma_de_pago_display|default:"Sin definir" }}</td>
                                 <td><span class="estado {{ flete.estado }}">{{ flete.get_estado_display }}</span></td>
                                 <td class="acciones-tabla">
-                                    {% include "core/acciones_estado_flete.html" %}
+                                    <a href="{% url 'editar_flete' flete.id %}">Editar</a>
+                                    <a href="{% url 'duplicar_flete' flete.id %}" onclick="return confirm('Queres duplicar este flete y abrir uno nuevo prellenado?');">Duplicar</a>
                                 </td>
                             </tr>
                         {% endfor %}
