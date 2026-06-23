@@ -2,7 +2,7 @@
 
 ## Mejoras UX menores
 
-- seguir refinando Home
+- seguir refinando panel operativo diario segun uso real
 - pulir textos y etiquetas
 - mejorar mensajes de exito y error
 - destacar mejor estados relevantes

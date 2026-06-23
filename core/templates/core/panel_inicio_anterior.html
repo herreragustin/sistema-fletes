@@ -1,0 +1,117 @@
+{% extends "core/base_panel.html" %}
+
+{% block title %}Panel{% endblock %}
+
+{% block content %}
+<h1>Sistema de gestion de fletes</h1>
+
+<div class="acciones">
+    <a href="{% url 'crear_flete' %}">Nuevo flete</a>
+    <a href="{% url 'lista_clientes' %}" class="secundario">Clientes</a>
+    <a href="{% url 'lista_choferes' %}" class="secundario">Choferes</a>
+    <a href="{% url 'facturacion' %}" class="secundario">Facturacion</a>
+    <a href="{% url 'cuenta_corriente_clientes' %}" class="secundario">Cuenta corriente</a>
+    <a href="{% url 'liquidacion_choferes' %}" class="secundario">Liquidacion choferes</a>
+</div>
+
+<div class="dashboard-grid">
+    <section class="dashboard-bloque">
+        <h2>Cobranzas pendientes</h2>
+        <div class="resumen-total">
+            <div>
+                <span class="muted">Clientes con cierre disponible</span>
+                <strong>{{ clientes_con_cobranza_pendiente }}</strong>
+            </div>
+            <div>
+                <span class="muted">Total pendiente</span>
+                <strong>${{ total_cobranza_pendiente|miles_punto }}</strong>
+            </div>
+        </div>
+        {% if clientes_con_cobranza_pendiente %}
+            <a href="{% url 'cuenta_corriente_clientes' %}" class="secundario">Ir a cuenta corriente</a>
+        {% else %}
+            <div class="sin-datos">No hay cobranzas pendientes para resolver.</div>
+        {% endif %}
+    </section>
+
+    <section class="dashboard-bloque">
+        <h2>Liquidaciones pendientes</h2>
+        <div class="resumen-total">
+            <div>
+                <span class="muted">Choferes con cierre disponible</span>
+                <strong>{{ choferes_con_liquidacion_pendiente }}</strong>
+            </div>
+            <div>
+                <span class="muted">Total pendiente</span>
+                <strong>${{ total_liquidacion_pendiente|miles_punto }}</strong>
+            </div>
+        </div>
+        {% if choferes_con_liquidacion_pendiente %}
+            <a href="{% url 'liquidacion_choferes' %}" class="secundario">Ir a liquidaciones</a>
+        {% else %}
+            <div class="sin-datos">No hay liquidaciones pendientes para resolver.</div>
+        {% endif %}
+    </section>
+
+    <section class="dashboard-bloque">
+        <h2>Accesos principales</h2>
+        <div class="lista-resumen">
+            <div class="lista-resumen-item">
+                <strong>Fletes</strong><br>
+                <span class="muted">Carga, seguimiento y edicion de viajes.</span>
+            </div>
+            <div class="lista-resumen-item">
+                <strong>Facturacion</strong><br>
+                <span class="muted">Consulta de fletes finalizados y cobros a clientes.</span>
+            </div>
+            <div class="lista-resumen-item">
+                <strong>Cuenta corriente</strong><br>
+                <span class="muted">Seguimiento de deuda y cobro de clientes en cuenta corriente.</span>
+            </div>
+            <div class="lista-resumen-item">
+                <strong>Liquidacion de choferes</strong><br>
+                <span class="muted">Control de pagos pendientes y liquidados a choferes.</span>
+            </div>
+        </div>
+    </section>
+
+    <section class="dashboard-bloque">
+        <h2>Fletes de hoy</h2>
+        {% if fletes_hoy %}
+            <div class="lista-resumen">
+                {% for flete in fletes_hoy %}
+                    <div class="lista-resumen-item">
+                        <strong>{{ flete.hora_inicio|time:"H:i"|default:"-" }} - {{ flete.cliente.nombre }}</strong><br>
+                        <span class="muted">
+                            {{ flete.chofer.nombre|default:"Sin chofer" }} |
+                            {{ flete.direccion_origen }} a {{ flete.direccion_destino }} |
+                            <span class="estado {{ flete.estado }}">{{ flete.get_estado_display }}</span>
+                            {% if flete.fecha_hora_en_curso %}
+                                | Inicio real {{ flete.fecha_hora_en_curso|date:"H:i" }}
+                            {% endif %}
+                        </span>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="sin-datos">No hay fletes cargados para hoy.</div>
+        {% endif %}
+    </section>
+
+    <section class="dashboard-bloque">
+        <h2>Ultimos fletes cargados</h2>
+        {% if ultimos_fletes %}
+            <div class="lista-resumen">
+                {% for flete in ultimos_fletes %}
+                    <div class="lista-resumen-item">
+                        <strong>#{{ flete.id }} - {{ flete.cliente.nombre }}</strong><br>
+                        <span class="muted">{{ flete.fecha }} {{ flete.hora_inicio }} | {{ flete.chofer.nombre }} | ${{ flete.precio|miles_punto }}</span>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="sin-datos">No hay fletes cargados recientemente.</div>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}

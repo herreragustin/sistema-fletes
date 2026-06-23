@@ -110,7 +110,16 @@ def _mensajes_validacion_flete_para_estado(flete, estado_destino):
 
 def panel_inicio(request):
     hoy = timezone.localdate()
-    fletes_hoy = Flete.objects.select_related("cliente", "chofer").filter(fecha=hoy).order_by("hora_inicio")
+    fletes_hoy = (
+        Flete.objects.select_related("cliente", "chofer")
+        .filter(fecha=hoy)
+        .order_by("hora_inicio", "id")
+    )
+    reservas_futuras = (
+        Flete.objects.select_related("cliente", "chofer")
+        .filter(fecha__gt=hoy)
+        .order_by("fecha", "hora_inicio", "id")
+    )
     ultimos_fletes = Flete.objects.select_related("cliente", "chofer").order_by("-fecha_creacion", "-id")[:5]
     fletes_cobro_pendiente = Flete.objects.filter(
         estado="finalizado",
@@ -136,6 +145,7 @@ def panel_inicio(request):
     return render(request, "core/panel_inicio.html", {
         "hoy": hoy,
         "fletes_hoy": fletes_hoy,
+        "reservas_futuras": reservas_futuras,
         "ultimos_fletes": ultimos_fletes,
         "clientes_con_cobranza_pendiente": clientes_con_cobranza_pendiente,
         "choferes_con_liquidacion_pendiente": choferes_con_liquidacion_pendiente,

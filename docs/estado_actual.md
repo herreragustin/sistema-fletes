@@ -75,13 +75,12 @@ Base tecnica actual:
 - indicadores visuales de cierre disponible
 
 ### Home
-- simple y operativa
-- cobranzas pendientes
-- liquidaciones pendientes
-- fletes de hoy
-- bloque visible de fletes del dia con estado e inicio real si ya comenzo
-- ultimos fletes cargados
-- accesos rapidos
+- redisenada como panel operativo diario
+- muestra fletes del dia con datos operativos completos
+- muestra reservas futuras por separado
+- los fletes en curso muestran hora de inicio real
+- mantiene accesos rapidos utiles
+- la version anterior quedo respaldada en `core/templates/core/panel_inicio_anterior.html`
 
 ### Reportes
 - totales por periodo
