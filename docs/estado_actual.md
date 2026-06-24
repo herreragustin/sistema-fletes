@@ -31,6 +31,11 @@ Base tecnica actual:
 - alta y edicion de fletes
 - generacion de reservas recurrentes semanales y mensuales desde nuevo flete
 - filtros en listados
+- listado de Fletes como historico operativo por defecto:
+  - muestra fletes finalizados hasta hoy
+  - permite filtrar por rango Desde/Hasta
+  - permite ver otros estados al elegir un filtro explicito
+- listado de Clientes con busqueda por nombre, telefono o direccion
 - listado de Fletes con informacion operativa ampliada:
   - horarios reales
   - duracion

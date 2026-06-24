@@ -11,7 +11,11 @@
 </div>
 
 <form method="get" class="filtros">
-    <div>
+    <div class="filtros-campo filtros-campo-texto">
+        <label>Buscar</label>
+        <input type="text" name="buscar" value="{{ filtros.buscar }}" placeholder="Buscar por nombre, telefono o direccion...">
+    </div>
+    <div class="filtros-campo">
         <label>Estado</label>
         <select name="estado">
             <option value="">Todos</option>
@@ -19,7 +23,7 @@
             <option value="inactivo" {% if filtros.estado == "inactivo" %}selected{% endif %}>Inactivo</option>
         </select>
     </div>
-    <div>
+    <div class="filtros-campo">
         <label>Cliente</label>
         <select name="cliente">
             <option value="">Todos</option>
@@ -28,8 +32,10 @@
             {% endfor %}
         </select>
     </div>
-    <button type="submit">Filtrar</button>
-    <a href="{% url 'lista_clientes' %}" class="muted">Limpiar</a>
+    <div class="filtros-acciones">
+        <button type="submit">Buscar</button>
+        <a href="{% url 'lista_clientes' %}" class="btn-secundario">Limpiar</a>
+    </div>
 </form>
 
 {% if clientes %}
@@ -70,6 +76,10 @@
     </tbody>
 </table>
 {% else %}
-<div class="sin-datos">No hay clientes cargados.</div>
+    {% if filtros.buscar %}
+        <div class="sin-datos">No se encontraron clientes para la busqueda aplicada.</div>
+    {% else %}
+        <div class="sin-datos">No hay clientes cargados.</div>
+    {% endif %}
 {% endif %}
 {% endblock %}

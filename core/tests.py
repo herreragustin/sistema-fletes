@@ -238,7 +238,7 @@ class ReservasRecurrentesTests(TestCase):
     def test_reserva_fuera_de_siete_dias_sigue_en_listado_general(self):
         reserva_fuera_de_rango = self._crear_flete(timezone.localdate() + timezone.timedelta(days=8))
 
-        response = self.client.get(reverse("lista_fletes"))
+        response = self.client.get(reverse("lista_fletes"), {"estado": "pendiente"})
 
         self.assertEqual(response.status_code, 200)
         self.assertIn(reserva_fuera_de_rango, response.context["fletes"])
@@ -376,7 +376,7 @@ class ReservasRecurrentesTests(TestCase):
     def test_acciones_de_reserva_muestran_solo_en_curso(self):
         self._crear_flete(timezone.localdate(), estado="pendiente")
 
-        response = self.client.get(reverse("lista_fletes"))
+        response = self.client.get(reverse("lista_fletes"), {"estado": "pendiente"})
 
         self.assertContains(response, '<button type="submit">En curso</button>', html=True)
         self.assertNotContains(response, '<button type="submit" class="btn-exito">Finalizar</button>', html=True)
@@ -388,7 +388,7 @@ class ReservasRecurrentesTests(TestCase):
     def test_acciones_de_en_curso_muestran_finalizar_y_volver_a_reserva(self):
         self._crear_flete(timezone.localdate(), estado="en_curso")
 
-        response = self.client.get(reverse("lista_fletes"))
+        response = self.client.get(reverse("lista_fletes"), {"estado": "en_curso"})
 
         self.assertContains(response, '<button type="submit" class="btn-exito">Finalizar</button>', html=True)
         self.assertContains(response, '<button type="submit">Volver a reserva</button>', html=True)
@@ -542,6 +542,102 @@ class ReservasRecurrentesTests(TestCase):
         self.assertEqual(flete.estado_cobro_cliente, "no_exigible")
         self.assertEqual(flete.cobro.estado, "pendiente")
         self.assertIsNone(flete.cobro.fecha_pago)
+
+    def test_listado_fletes_sin_filtros_muestra_historico_finalizado_hasta_hoy(self):
+        hoy = timezone.localdate()
+        finalizado_pasado = self._crear_flete(hoy - timezone.timedelta(days=2), estado="finalizado")
+        finalizado_hoy = self._crear_flete(hoy, time(11, 0), estado="finalizado")
+        self._crear_flete(hoy + timezone.timedelta(days=1), time(12, 0), estado="finalizado")
+        self._crear_flete(hoy, time(13, 0), estado="pendiente")
+        self._crear_flete(hoy, time(14, 0), estado="en_curso")
+
+        response = self.client.get(reverse("lista_fletes"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(list(response.context["fletes"]), [finalizado_hoy, finalizado_pasado])
+        self.assertTrue(response.context["filtros"]["historico_default"])
+        self.assertContains(response, "Mostrando historico: fletes finalizados hasta hoy.")
+
+    def test_listado_fletes_filtra_por_desde_y_hasta(self):
+        flete_1 = self._crear_flete(date(2026, 6, 10), estado="finalizado")
+        flete_2 = self._crear_flete(date(2026, 6, 15), time(11, 0), estado="finalizado")
+        self._crear_flete(date(2026, 6, 20), time(12, 0), estado="finalizado")
+
+        response = self.client.get(
+            reverse("lista_fletes"),
+            {"fecha_desde": "2026-06-10", "fecha_hasta": "2026-06-15"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(list(response.context["fletes"]), [flete_2, flete_1])
+        self.assertFalse(response.context["filtros"]["historico_default"])
+
+    def test_listado_fletes_filtra_solo_desde(self):
+        self._crear_flete(date(2026, 6, 10), estado="finalizado")
+        flete_2 = self._crear_flete(date(2026, 6, 15), time(11, 0), estado="finalizado")
+        flete_3 = self._crear_flete(date(2026, 6, 20), time(12, 0), estado="finalizado")
+
+        response = self.client.get(reverse("lista_fletes"), {"fecha_desde": "2026-06-15"})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(list(response.context["fletes"]), [flete_3, flete_2])
+
+    def test_listado_fletes_filtra_solo_hasta(self):
+        flete_1 = self._crear_flete(date(2026, 6, 10), estado="finalizado")
+        flete_2 = self._crear_flete(date(2026, 6, 15), time(11, 0), estado="finalizado")
+        self._crear_flete(date(2026, 6, 20), time(12, 0), estado="finalizado")
+
+        response = self.client.get(reverse("lista_fletes"), {"fecha_hasta": "2026-06-15"})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(list(response.context["fletes"]), [flete_2, flete_1])
+
+    def test_listado_fletes_respeta_estado_reserva_y_en_curso(self):
+        hoy = timezone.localdate()
+        reserva = self._crear_flete(hoy + timezone.timedelta(days=1), estado="pendiente")
+        en_curso = self._crear_flete(hoy, time(11, 0), estado="en_curso")
+        self._crear_flete(hoy, time(12, 0), estado="finalizado")
+
+        response_reserva = self.client.get(reverse("lista_fletes"), {"estado": "pendiente"})
+        response_en_curso = self.client.get(reverse("lista_fletes"), {"estado": "en_curso"})
+
+        self.assertEqual(list(response_reserva.context["fletes"]), [reserva])
+        self.assertEqual(list(response_en_curso.context["fletes"]), [en_curso])
+        self.assertFalse(response_reserva.context["filtros"]["historico_default"])
+        self.assertFalse(response_en_curso.context["filtros"]["historico_default"])
+
+    def test_limpiar_fletes_vuelve_al_historico_default(self):
+        response = self.client.get(reverse("lista_fletes"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '<a href="/fletes/" class="btn-secundario">Limpiar</a>', html=True)
+        self.assertTrue(response.context["filtros"]["historico_default"])
+
+    def test_clientes_busca_por_nombre_telefono_y_direccion(self):
+        cliente_nombre = self.cliente
+        cliente_nombre.nombre = "Cliente Norte"
+        cliente_nombre.telefono = "1111111111"
+        cliente_nombre.direccion = "Calle A"
+        cliente_nombre.save()
+        cliente_telefono = Cliente.objects.create(nombre="Cliente Sur", telefono="22223333", direccion="Calle B")
+        cliente_direccion = Cliente.objects.create(nombre="Cliente Oeste", telefono="33334444", direccion="Ruta 8 km 44")
+
+        response_nombre = self.client.get(reverse("lista_clientes"), {"buscar": "norte"})
+        response_telefono = self.client.get(reverse("lista_clientes"), {"buscar": "2222"})
+        response_direccion = self.client.get(reverse("lista_clientes"), {"buscar": "ruta 8"})
+
+        self.assertEqual(list(response_nombre.context["clientes"]), [cliente_nombre])
+        self.assertEqual(list(response_telefono.context["clientes"]), [cliente_telefono])
+        self.assertEqual(list(response_direccion.context["clientes"]), [cliente_direccion])
+        self.assertContains(response_direccion, 'value="ruta 8"')
+
+    def test_clientes_busqueda_sin_resultados_y_limpiar(self):
+        response = self.client.get(reverse("lista_clientes"), {"buscar": "no-existe"})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(list(response.context["clientes"]), [])
+        self.assertContains(response, "No se encontraron clientes para la busqueda aplicada.")
+        self.assertContains(response, '<a href="/clientes/" class="btn-secundario">Limpiar</a>', html=True)
 
     def test_nuevo_chofer_tiene_porcentaje_estandar_80(self):
         chofer = Chofer.objects.create(

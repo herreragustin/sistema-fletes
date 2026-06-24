@@ -261,17 +261,20 @@ def lista_fletes(request):
     fletes = Flete.objects.select_related("cliente", "chofer").all()
     clientes = Cliente.objects.order_by("nombre")
     choferes = Chofer.objects.order_by("nombre")
+    hoy = timezone.localdate()
 
     # filtros
     filtro_rapido = request.GET.get("filtro")
-    fecha = request.GET.get("fecha")
+    fecha_desde = request.GET.get("fecha_desde")
+    fecha_hasta = request.GET.get("fecha_hasta")
     estado = request.GET.get("estado")
     cliente = request.GET.get("cliente")
     chofer = request.GET.get("chofer")
     forma_de_pago = request.GET.get("forma_de_pago")
+    usa_historico_default = not any([filtro_rapido, fecha_desde, fecha_hasta, estado])
 
     if filtro_rapido == "hoy":
-        fletes = fletes.filter(fecha=timezone.localdate())
+        fletes = fletes.filter(fecha=hoy)
     elif filtro_rapido == "pendientes":
         fletes = fletes.filter(estado="pendiente")
     elif filtro_rapido == "en_curso":
@@ -283,8 +286,14 @@ def lista_fletes(request):
     elif filtro_rapido == "sin_chofer":
         fletes = fletes.filter(chofer__isnull=True)
 
-    if fecha:
-        fletes = fletes.filter(fecha=fecha)
+    if usa_historico_default:
+        fletes = fletes.filter(estado="finalizado", fecha__lte=hoy)
+
+    if fecha_desde:
+        fletes = fletes.filter(fecha__gte=fecha_desde)
+
+    if fecha_hasta:
+        fletes = fletes.filter(fecha__lte=fecha_hasta)
 
     if estado:
         fletes = fletes.filter(estado=estado)
@@ -304,11 +313,13 @@ def lista_fletes(request):
 
     filtros_actuales = {
         "filtro": filtro_rapido,
-        "fecha": fecha,
+        "fecha_desde": fecha_desde,
+        "fecha_hasta": fecha_hasta,
         "estado": estado,
         "cliente": cliente,
         "chofer": chofer,
         "forma_de_pago": forma_de_pago,
+        "historico_default": usa_historico_default,
     }
 
     base_params = request.GET.copy()
@@ -470,6 +481,7 @@ def lista_clientes(request):
     clientes = Cliente.objects.all()
     estado = request.GET.get("estado")
     cliente = request.GET.get("cliente")
+    buscar = request.GET.get("buscar", "").strip()
 
     if estado == "activo":
         clientes = clientes.filter(activo=True)
@@ -479,10 +491,17 @@ def lista_clientes(request):
     if cliente:
         clientes = clientes.filter(id=cliente)
 
+    if buscar:
+        clientes = clientes.filter(
+            Q(nombre__icontains=buscar)
+            | Q(telefono__icontains=buscar)
+            | Q(direccion__icontains=buscar)
+        )
+
     return render(request, "core/lista_clientes.html", {
         "clientes": clientes,
-        "clientes_filtro": Cliente.objects.all(),
-        "filtros": {"estado": estado, "cliente": cliente},
+        "clientes_filtro": Cliente.objects.order_by("nombre"),
+        "filtros": {"estado": estado, "cliente": cliente, "buscar": buscar},
     })
 
 
