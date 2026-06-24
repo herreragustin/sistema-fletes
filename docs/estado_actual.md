@@ -78,7 +78,7 @@ Base tecnica actual:
 ### Home
 - redisenada como panel operativo diario
 - muestra fletes del dia con datos operativos completos
-- muestra reservas futuras por separado
+- muestra reservas futuras de los proximos 7 dias por separado
 - los fletes en curso muestran hora de inicio real
 - mantiene accesos rapidos utiles
 - la version anterior quedo respaldada en `core/templates/core/panel_inicio_anterior.html`

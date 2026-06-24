@@ -209,7 +209,7 @@
         <div class="panel-seccion-header">
             <div>
                 <h2>Reservas / proximos fletes</h2>
-                <p>Viajes programados para fechas posteriores a hoy.</p>
+                <p>Viajes programados para los proximos 7 dias.</p>
             </div>
             <span class="panel-metrica">{{ reservas_futuras|length }} reserva{{ reservas_futuras|length|pluralize }}</span>
         </div>
@@ -268,7 +268,7 @@
                 </table>
             </div>
         {% else %}
-            <div class="sin-datos">No hay reservas cargadas.</div>
+            <div class="sin-datos">No hay reservas cargadas para los proximos 7 dias.</div>
         {% endif %}
     </section>
 </div>

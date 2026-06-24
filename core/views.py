@@ -175,6 +175,7 @@ def _mensajes_validacion_flete_para_estado(flete, estado_destino):
 
 def panel_inicio(request):
     hoy = timezone.localdate()
+    limite_reservas = hoy + timedelta(days=7)
     fletes_hoy = (
         Flete.objects.select_related("cliente", "chofer")
         .filter(fecha=hoy)
@@ -182,7 +183,7 @@ def panel_inicio(request):
     )
     reservas_futuras = (
         Flete.objects.select_related("cliente", "chofer")
-        .filter(fecha__gt=hoy)
+        .filter(fecha__gt=hoy, fecha__lte=limite_reservas)
         .order_by("fecha", "hora_inicio", "id")
     )
     ultimos_fletes = Flete.objects.select_related("cliente", "chofer").order_by("-fecha_creacion", "-id")[:5]

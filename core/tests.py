@@ -204,21 +204,53 @@ class ReservasRecurrentesTests(TestCase):
         self.assertFalse(form_mensual.is_valid())
         self.assertIn("cantidad_repeticiones", form_mensual.errors)
 
-    def test_reservas_futuras_aparecen_en_home(self):
-        fecha_base = timezone.localdate() + timezone.timedelta(days=1)
-        self.client.post(
-            reverse("crear_flete"),
-            self._datos_flete(
-                fecha=fecha_base.isoformat(),
-                tipo_repeticion="semanal",
-                cantidad_repeticiones="2",
-            ),
+    def _crear_flete(self, fecha, hora=time(10, 15), estado="pendiente"):
+        return Flete.objects.create(
+            cliente=self.cliente,
+            chofer=self.chofer,
+            fecha=fecha,
+            hora_inicio=hora,
+            direccion_origen="Deposito",
+            direccion_destino="Destino",
+            ayudantes=1,
+            precio=Decimal("50000"),
+            forma_de_pago="cuenta_corriente",
+            estado=estado,
         )
+
+    def test_home_muestra_hoy_y_reservas_solo_de_proximos_siete_dias(self):
+        hoy = timezone.localdate()
+        flete_hoy = self._crear_flete(hoy, time(9, 0))
+        reserva_manana = self._crear_flete(hoy + timezone.timedelta(days=1), time(10, 0))
+        reserva_dia_siete = self._crear_flete(hoy + timezone.timedelta(days=7), time(11, 0))
+        reserva_fuera_de_rango = self._crear_flete(hoy + timezone.timedelta(days=8), time(12, 0))
 
         response = self.client.get(reverse("panel_inicio"))
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.context["reservas_futuras"]), 2)
+        self.assertEqual(list(response.context["fletes_hoy"]), [flete_hoy])
+        self.assertEqual(
+            list(response.context["reservas_futuras"]),
+            [reserva_manana, reserva_dia_siete],
+        )
+        self.assertNotIn(reserva_fuera_de_rango, response.context["reservas_futuras"])
+
+    def test_reserva_fuera_de_siete_dias_sigue_en_listado_general(self):
+        reserva_fuera_de_rango = self._crear_flete(timezone.localdate() + timezone.timedelta(days=8))
+
+        response = self.client.get(reverse("lista_fletes"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(reserva_fuera_de_rango, response.context["fletes"])
+
+    def test_home_sin_reservas_en_proximos_siete_dias_muestra_mensaje(self):
+        self._crear_flete(timezone.localdate() + timezone.timedelta(days=8))
+
+        response = self.client.get(reverse("panel_inicio"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "No hay reservas cargadas para los proximos 7 dias.")
+        self.assertEqual(len(response.context["reservas_futuras"]), 0)
 
     def test_editar_flete_normal_sigue_funcionando(self):
         flete = Flete.objects.create(

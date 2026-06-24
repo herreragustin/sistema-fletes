@@ -145,6 +145,9 @@ La Home responde a:
 - que cobranzas hay pendientes
 - que liquidaciones hay pendientes
 - que fletes hay hoy
+- que reservas futuras hay dentro de los proximos 7 dias
 - cuales fueron los ultimos fletes cargados
+
+Las reservas con fecha posterior a esos 7 dias no se muestran en la Home, pero no se modifican ni se eliminan. Siguen disponibles en el listado general de Fletes y mediante filtros por fecha.
 
 No busca ser un dashboard complejo.
