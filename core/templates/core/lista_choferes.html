@@ -32,7 +32,7 @@
         <label>Porcentaje</label>
         <select name="porcentaje" onchange="this.form.requestSubmit ? this.form.requestSubmit() : this.form.submit()">
             <option value="">Todos</option>
-            <option value="estandar" {% if filtros.porcentaje == "estandar" %}selected{% endif %}>Estandar 60%</option>
+            <option value="estandar" {% if filtros.porcentaje == "estandar" %}selected{% endif %}>Estandar 80%</option>
             <option value="excepcion" {% if filtros.porcentaje == "excepcion" %}selected{% endif %}>Excepciones</option>
         </select>
     </div>
@@ -66,7 +66,7 @@
             <td>{{ chofer.dni|default:"-" }}</td>
             <td>{{ chofer.get_tipo_liquidacion_display }}</td>
             <td>
-                {% if chofer.porcentaje_liquidacion == 60 %}
+                {% if chofer.porcentaje_liquidacion == 80 %}
                     <span class="estado">{{ chofer.porcentaje_liquidacion }}%</span>
                 {% else %}
                     <span class="estado excepcion">Excepcion: {{ chofer.porcentaje_liquidacion }}%</span>

@@ -104,6 +104,10 @@ Cada chofer tiene:
 - `tipo_liquidacion`
 - `porcentaje_liquidacion`
 
+El porcentaje estandar de liquidacion es 80%.
+El porcentaje sigue siendo configurable por chofer.
+Todo porcentaje distinto de 80% se considera una excepcion o porcentaje especial.
+
 Tipos de liquidacion:
 - semanal
 - quincenal

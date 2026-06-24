@@ -558,9 +558,9 @@ def lista_choferes(request):
         choferes = choferes.filter(id=chofer)
 
     if porcentaje == "estandar":
-        choferes = choferes.filter(porcentaje_liquidacion=60)
+        choferes = choferes.filter(porcentaje_liquidacion=80)
     elif porcentaje == "excepcion":
-        choferes = choferes.exclude(porcentaje_liquidacion=60)
+        choferes = choferes.exclude(porcentaje_liquidacion=80)
 
     return render(request, "core/lista_choferes.html", {
         "choferes": choferes,

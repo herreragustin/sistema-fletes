@@ -56,7 +56,7 @@ Base actual:
   - quincenal
   - mensual
 - porcentaje de liquidacion por chofer:
-  - default 60
+  - default 80
   - configurable por chofer
 - `importe_chofer` calculado dinamicamente desde el porcentaje
 - cierre simple de liquidacion por periodo
@@ -89,7 +89,7 @@ Base actual:
 - cada chofer tiene:
   - `tipo_liquidacion`
   - `porcentaje_liquidacion`
-- `importe_chofer` no usa mas un 60% fijo global
+- `importe_chofer` no usa un porcentaje fijo global; toma el porcentaje configurable del chofer
 - el pago al chofer es independiente del cobro al cliente
 
 ## Decisiones importantes tomadas

@@ -63,7 +63,7 @@
             </td>
             <td>{{ chofer.get_tipo_liquidacion_display }}</td>
             <td>
-                {% if chofer.porcentaje_liquidacion == 60 %}
+                {% if chofer.porcentaje_liquidacion == 80 %}
                     <span class="estado">{{ chofer.porcentaje_liquidacion }}%</span>
                 {% else %}
                     <span class="estado excepcion">Excepcion: {{ chofer.porcentaje_liquidacion }}%</span>

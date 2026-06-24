@@ -542,3 +542,85 @@ class ReservasRecurrentesTests(TestCase):
         self.assertEqual(flete.estado_cobro_cliente, "no_exigible")
         self.assertEqual(flete.cobro.estado, "pendiente")
         self.assertIsNone(flete.cobro.fecha_pago)
+
+    def test_nuevo_chofer_tiene_porcentaje_estandar_80(self):
+        chofer = Chofer.objects.create(
+            nombre="Chofer 80",
+            telefono="7777777777",
+            dni="77777777",
+            patente="STD080",
+        )
+
+        self.assertEqual(chofer.porcentaje_liquidacion, 80)
+
+    def test_editar_chofer_permanece_modificable(self):
+        response = self.client.post(
+            reverse("editar_chofer", args=[self.chofer.id]),
+            {
+                "nombre": self.chofer.nombre,
+                "telefono": self.chofer.telefono,
+                "dni": self.chofer.dni,
+                "registro": "REG",
+                "direccion": "Base",
+                "estado": "activo",
+                "tipo_liquidacion": "semanal",
+                "porcentaje_liquidacion": "75",
+                "vehiculo": "Camion",
+                "patente": self.chofer.patente,
+                "seguro": "Seguro",
+            },
+        )
+
+        self.chofer.refresh_from_db()
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(self.chofer.porcentaje_liquidacion, 75)
+
+    def test_porcentaje_80_no_figura_como_excepcion_y_porcentaje_distinto_si(self):
+        Chofer.objects.create(
+            nombre="Chofer especial",
+            telefono="8888888888",
+            dni="88888888",
+            patente="ESP075",
+            porcentaje_liquidacion=75,
+        )
+
+        response = self.client.get(reverse("lista_choferes"))
+
+        self.assertContains(response, "Estandar 80%")
+        self.assertContains(response, '<span class="estado">80%</span>', html=True)
+        self.assertContains(response, "Excepcion: 75%")
+
+    def test_filtros_estandar_y_excepcion_usan_80(self):
+        especial = Chofer.objects.create(
+            nombre="Chofer especial",
+            telefono="9999999999",
+            dni="99999999",
+            patente="ESP070",
+            porcentaje_liquidacion=70,
+        )
+
+        response_estandar = self.client.get(reverse("lista_choferes"), {"porcentaje": "estandar"})
+        response_excepcion = self.client.get(reverse("lista_choferes"), {"porcentaje": "excepcion"})
+
+        self.assertIn(self.chofer, response_estandar.context["choferes"])
+        self.assertNotIn(especial, response_estandar.context["choferes"])
+        self.assertIn(especial, response_excepcion.context["choferes"])
+        self.assertNotIn(self.chofer, response_excepcion.context["choferes"])
+
+    def test_importe_chofer_y_reportes_usan_porcentaje_80(self):
+        flete = self._crear_flete(timezone.localdate(), estado="finalizado")
+
+        response = self.client.get(reverse("reportes"))
+
+        self.assertEqual(flete.importe_chofer, Decimal("40000.00"))
+        self.assertEqual(response.context["total_a_pagar_choferes"], Decimal("40000.00"))
+
+    def test_flete_existente_recalcula_importe_con_porcentaje_actual_del_chofer(self):
+        flete = self._crear_flete(timezone.localdate(), estado="finalizado")
+        self.assertEqual(flete.importe_chofer, Decimal("40000.00"))
+
+        self.chofer.porcentaje_liquidacion = 70
+        self.chofer.save(update_fields=["porcentaje_liquidacion"])
+        flete.refresh_from_db()
+
+        self.assertEqual(flete.importe_chofer, Decimal("35000.00"))

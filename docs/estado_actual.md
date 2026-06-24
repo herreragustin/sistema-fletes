@@ -69,6 +69,8 @@ Base tecnica actual:
   - quincenal
   - mensual
 - porcentaje de liquidacion por chofer
+- porcentaje estandar de liquidacion: 80%
+- porcentajes distintos de 80% se muestran como excepciones
 - importe del chofer calculado dinamicamente
 - ficha de chofer con historial operativo
 - cierre simple de liquidacion

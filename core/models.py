@@ -52,7 +52,7 @@ class Chofer(models.Model):
         default="semanal",
     )
     porcentaje_liquidacion = models.PositiveSmallIntegerField(
-        default=60,
+        default=80,
         validators=[MinValueValidator(0), MaxValueValidator(100)],
         verbose_name="Porcentaje de liquidacion",
     )
@@ -71,7 +71,7 @@ class Chofer(models.Model):
 
     @property
     def porcentaje_liquidacion_decimal(self):
-        porcentaje = self.porcentaje_liquidacion if self.porcentaje_liquidacion is not None else 60
+        porcentaje = self.porcentaje_liquidacion if self.porcentaje_liquidacion is not None else 80
         return Decimal(porcentaje) / Decimal("100")
 
     def rango_liquidacion(self, referencia=None):
@@ -163,7 +163,7 @@ class Flete(models.Model):
 
     @property
     def importe_chofer(self):
-        porcentaje = getattr(self.chofer, "porcentaje_liquidacion_decimal", Decimal("60") / Decimal("100"))
+        porcentaje = getattr(self.chofer, "porcentaje_liquidacion_decimal", Decimal("80") / Decimal("100"))
         return (self.precio * porcentaje).quantize(Decimal("0.01"))
 
     def clean(self):
