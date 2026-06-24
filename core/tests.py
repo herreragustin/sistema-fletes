@@ -354,3 +354,56 @@ class ReservasRecurrentesTests(TestCase):
         self.assertContains(response, "Pendiente de cobro")
         self.assertContains(response, "Pendiente")
         self.assertNotContains(response, "Reserva de cobro")
+
+    def test_acciones_de_reserva_muestran_solo_en_curso(self):
+        self._crear_flete(timezone.localdate(), estado="pendiente")
+
+        response = self.client.get(reverse("lista_fletes"))
+
+        self.assertContains(response, '<button type="submit">En curso</button>', html=True)
+        self.assertNotContains(response, '<button type="submit" class="btn-exito">Finalizar</button>', html=True)
+        self.assertNotContains(response, '<button type="submit">Volver a reserva</button>', html=True)
+        self.assertNotContains(response, '<button type="submit">Volver a en curso</button>', html=True)
+        self.assertContains(response, "Editar")
+        self.assertContains(response, "Duplicar")
+
+    def test_acciones_de_en_curso_muestran_finalizar_y_volver_a_reserva(self):
+        self._crear_flete(timezone.localdate(), estado="en_curso")
+
+        response = self.client.get(reverse("lista_fletes"))
+
+        self.assertContains(response, '<button type="submit" class="btn-exito">Finalizar</button>', html=True)
+        self.assertContains(response, '<button type="submit">Volver a reserva</button>', html=True)
+        self.assertContains(response, "Se limpiaran los horarios reales cargados.")
+        self.assertNotContains(response, '<button type="submit">En curso</button>', html=True)
+        self.assertNotContains(response, '<button type="submit">Volver a en curso</button>', html=True)
+        self.assertContains(response, "Editar")
+        self.assertContains(response, "Duplicar")
+
+    def test_acciones_de_finalizado_muestran_solo_volver_a_en_curso(self):
+        self._crear_flete(timezone.localdate(), estado="finalizado")
+
+        response = self.client.get(reverse("lista_fletes"))
+
+        self.assertContains(response, '<button type="submit">Volver a en curso</button>', html=True)
+        self.assertNotContains(response, '<button type="submit" class="btn-exito">Finalizar</button>', html=True)
+        self.assertNotContains(response, '<button type="submit">En curso</button>', html=True)
+        self.assertNotContains(response, '<button type="submit">Volver a reserva</button>', html=True)
+        self.assertContains(response, "Editar")
+        self.assertContains(response, "Duplicar")
+
+    def test_volver_de_en_curso_a_reserva_limpia_horarios_y_muestra_reserva(self):
+        flete = self._crear_flete(timezone.localdate(), estado="en_curso")
+        self.assertIsNotNone(flete.fecha_hora_en_curso)
+
+        response = self.client.post(reverse("cambiar_estado_flete", args=[flete.id, "pendiente"]))
+
+        flete.refresh_from_db()
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(flete.estado, "pendiente")
+        self.assertIsNone(flete.fecha_hora_en_curso)
+        self.assertIsNone(flete.fecha_hora_finalizado)
+        self.assertIsNone(flete.duracion)
+
+        response = self.client.get(reverse("lista_fletes"))
+        self.assertContains(response, "Reserva")

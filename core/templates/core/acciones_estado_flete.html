@@ -15,13 +15,10 @@
         <input type="hidden" name="next" value="{{ request.path }}">
         <button type="submit" class="btn-exito">Finalizar</button>
     </form>
-{% endif %}
-
-{% if flete.estado != "cancelado" %}
-    <form method="post" action="{% url 'cambiar_estado_flete' flete.id 'cancelado' %}" onsubmit="return confirm('Seguro que queres cancelar este flete?');">
+    <form method="post" action="{% url 'cambiar_estado_flete' flete.id 'pendiente' %}" onsubmit="return confirm('Seguro que queres volver este flete a reserva? Se limpiaran los horarios reales cargados.');">
         {% csrf_token %}
         <input type="hidden" name="next" value="{{ request.path }}">
-        <button type="submit" class="btn-peligro">Cancelar</button>
+        <button type="submit">Volver a reserva</button>
     </form>
 {% endif %}
 
@@ -30,13 +27,5 @@
         {% csrf_token %}
         <input type="hidden" name="next" value="{{ request.path }}">
         <button type="submit">Volver a en curso</button>
-    </form>
-{% endif %}
-
-{% if flete.estado != "pendiente" %}
-    <form method="post" action="{% url 'cambiar_estado_flete' flete.id 'pendiente' %}">
-        {% csrf_token %}
-        <input type="hidden" name="next" value="{{ request.path }}">
-        <button type="submit">Volver a reserva</button>
     </form>
 {% endif %}
