@@ -2,7 +2,7 @@
 <a href="{% url 'duplicar_flete' flete.id %}" onclick="return confirm('Queres duplicar este flete y abrir uno nuevo prellenado?');">Duplicar</a>
 
 {% if flete.estado == "pendiente" %}
-    <form method="post" action="{% url 'cambiar_estado_flete' flete.id 'en_curso' %}">
+    <form method="post" action="{% url 'cambiar_estado_flete' flete.id 'en_curso' %}" onsubmit="return confirm('Seguro que queres poner este flete en curso?');">
         {% csrf_token %}
         <input type="hidden" name="next" value="{{ request.path }}">
         <button type="submit">En curso</button>
@@ -23,7 +23,7 @@
 {% endif %}
 
 {% if flete.estado == "finalizado" %}
-    <form method="post" action="{% url 'cambiar_estado_flete' flete.id 'en_curso' %}">
+    <form method="post" action="{% url 'cambiar_estado_flete' flete.id 'en_curso' %}" onsubmit="return confirm('Seguro que queres volver este flete a en curso? Se limpiara la finalizacion cargada.');">
         {% csrf_token %}
         <input type="hidden" name="next" value="{{ request.path }}">
         <button type="submit">Volver a en curso</button>

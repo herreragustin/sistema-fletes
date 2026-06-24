@@ -407,3 +407,120 @@ class ReservasRecurrentesTests(TestCase):
 
         response = self.client.get(reverse("lista_fletes"))
         self.assertContains(response, "Reserva")
+
+    def test_home_reserva_muestra_editar_duplicar_y_en_curso(self):
+        self._crear_flete(timezone.localdate(), estado="pendiente")
+
+        response = self.client.get(reverse("panel_inicio"))
+
+        self.assertContains(response, "Editar")
+        self.assertContains(response, "Duplicar")
+        self.assertContains(response, '<button type="submit">En curso</button>', html=True)
+        self.assertNotContains(response, '<button type="submit" class="btn-exito">Finalizar</button>', html=True)
+        self.assertNotContains(response, '<button type="submit">Volver a reserva</button>', html=True)
+        self.assertNotContains(response, '<button type="submit">Volver a en curso</button>', html=True)
+
+    def test_home_en_curso_muestra_editar_duplicar_finalizar_y_volver_a_reserva(self):
+        self._crear_flete(timezone.localdate(), estado="en_curso")
+
+        response = self.client.get(reverse("panel_inicio"))
+
+        self.assertContains(response, "Editar")
+        self.assertContains(response, "Duplicar")
+        self.assertContains(response, '<button type="submit" class="btn-exito">Finalizar</button>', html=True)
+        self.assertContains(response, '<button type="submit">Volver a reserva</button>', html=True)
+        self.assertNotContains(response, '<button type="submit">En curso</button>', html=True)
+        self.assertNotContains(response, '<button type="submit">Volver a en curso</button>', html=True)
+
+    def test_home_finalizado_muestra_editar_duplicar_y_volver_a_en_curso(self):
+        self._crear_flete(timezone.localdate(), estado="finalizado")
+
+        response = self.client.get(reverse("panel_inicio"))
+
+        self.assertContains(response, "Editar")
+        self.assertContains(response, "Duplicar")
+        self.assertContains(response, '<button type="submit">Volver a en curso</button>', html=True)
+        self.assertNotContains(response, '<button type="submit">En curso</button>', html=True)
+        self.assertNotContains(response, '<button type="submit" class="btn-exito">Finalizar</button>', html=True)
+        self.assertNotContains(response, '<button type="submit">Volver a reserva</button>', html=True)
+
+    def test_home_cancelado_muestra_solo_editar_y_duplicar(self):
+        self._crear_flete(timezone.localdate(), estado="cancelado")
+
+        response = self.client.get(reverse("panel_inicio"))
+
+        self.assertContains(response, "Editar")
+        self.assertContains(response, "Duplicar")
+        self.assertNotContains(response, '<button type="submit">En curso</button>', html=True)
+        self.assertNotContains(response, '<button type="submit" class="btn-exito">Finalizar</button>', html=True)
+        self.assertNotContains(response, '<button type="submit">Volver a reserva</button>', html=True)
+        self.assertNotContains(response, '<button type="submit">Volver a en curso</button>', html=True)
+
+    def test_accion_home_reserva_a_en_curso_guarda_inicio_y_vuelve_al_panel(self):
+        flete = self._crear_flete(timezone.localdate(), estado="pendiente")
+
+        response = self.client.post(
+            reverse("cambiar_estado_flete", args=[flete.id, "en_curso"]),
+            {"next": reverse("panel_inicio")},
+        )
+
+        flete.refresh_from_db()
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response["Location"], reverse("panel_inicio"))
+        self.assertEqual(flete.estado, "en_curso")
+        self.assertIsNotNone(flete.fecha_hora_en_curso)
+        self.assertIsNone(flete.fecha_hora_finalizado)
+
+    def test_accion_home_en_curso_a_finalizado_guarda_final_y_duracion(self):
+        flete = self._crear_flete(timezone.localdate(), estado="en_curso")
+
+        response = self.client.post(
+            reverse("cambiar_estado_flete", args=[flete.id, "finalizado"]),
+            {"next": reverse("panel_inicio")},
+        )
+
+        flete.refresh_from_db()
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response["Location"], reverse("panel_inicio"))
+        self.assertEqual(flete.estado, "finalizado")
+        self.assertIsNotNone(flete.fecha_hora_en_curso)
+        self.assertIsNotNone(flete.fecha_hora_finalizado)
+        self.assertIsNotNone(flete.duracion)
+
+    def test_accion_home_en_curso_a_reserva_limpia_horarios(self):
+        flete = self._crear_flete(timezone.localdate(), estado="en_curso")
+
+        response = self.client.post(
+            reverse("cambiar_estado_flete", args=[flete.id, "pendiente"]),
+            {"next": reverse("panel_inicio")},
+        )
+
+        flete.refresh_from_db()
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response["Location"], reverse("panel_inicio"))
+        self.assertEqual(flete.estado, "pendiente")
+        self.assertIsNone(flete.fecha_hora_en_curso)
+        self.assertIsNone(flete.fecha_hora_finalizado)
+        self.assertIsNone(flete.duracion)
+
+    def test_accion_home_finalizado_a_en_curso_limpia_finalizacion_y_cobro(self):
+        flete = self._crear_flete(timezone.localdate(), estado="finalizado")
+        self.assertIsNotNone(flete.fecha_hora_finalizado)
+        self.assertEqual(flete.estado_cobro_cliente, "pendiente")
+
+        response = self.client.post(
+            reverse("cambiar_estado_flete", args=[flete.id, "en_curso"]),
+            {"next": reverse("panel_inicio")},
+        )
+
+        flete.refresh_from_db()
+        flete.cobro.refresh_from_db()
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response["Location"], reverse("panel_inicio"))
+        self.assertEqual(flete.estado, "en_curso")
+        self.assertIsNotNone(flete.fecha_hora_en_curso)
+        self.assertIsNone(flete.fecha_hora_finalizado)
+        self.assertIsNone(flete.duracion)
+        self.assertEqual(flete.estado_cobro_cliente, "no_exigible")
+        self.assertEqual(flete.cobro.estado, "pendiente")
+        self.assertIsNone(flete.cobro.fecha_pago)
