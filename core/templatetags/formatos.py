@@ -27,3 +27,15 @@ def miles_punto(value):
 
     texto = f"{numero:,.2f}"
     return texto.replace(",", "_").replace(".", ",").replace("_", ".")
+
+
+@register.filter(name="estado_flete_display")
+def estado_flete_display(flete):
+    if getattr(flete, "estado", None) == "pendiente":
+        return "Reserva"
+
+    get_display = getattr(flete, "get_estado_display", None)
+    if callable(get_display):
+        return get_display()
+
+    return getattr(flete, "estado", "")

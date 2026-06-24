@@ -303,3 +303,54 @@ class ReservasRecurrentesTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(Flete.objects.count(), 2)
         self.assertTrue(Flete.objects.filter(fecha=date(2026, 7, 8), hora_inicio=time(12, 0)).exists())
+
+    def test_estado_pendiente_de_flete_se_muestra_como_reserva(self):
+        self._crear_flete(timezone.localdate(), estado="pendiente")
+
+        response = self.client.get(reverse("lista_fletes"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Reserva")
+        self.assertContains(response, "Reservas")
+        self.assertNotContains(response, ">Pendiente</span>", html=False)
+
+    def test_filtro_reservas_sigue_filtrando_estado_interno_pendiente(self):
+        reserva = self._crear_flete(timezone.localdate(), estado="pendiente")
+        en_curso = self._crear_flete(timezone.localdate(), time(11, 0), estado="en_curso")
+
+        response = self.client.get(reverse("lista_fletes"), {"filtro": "pendientes"})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(reserva, response.context["fletes"])
+        self.assertNotIn(en_curso, response.context["fletes"])
+        self.assertContains(response, "Reservas")
+
+    def test_formulario_flete_muestra_reserva_sin_cambiar_valor_interno(self):
+        response = self.client.get(reverse("crear_flete"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '<option value="pendiente" selected>Reserva</option>', html=True)
+
+    def test_estados_no_pendientes_conservan_su_etiqueta(self):
+        self._crear_flete(timezone.localdate(), estado="en_curso")
+        self._crear_flete(timezone.localdate(), time(11, 0), estado="finalizado")
+        self._crear_flete(timezone.localdate(), time(12, 0), estado="cancelado")
+
+        response = self.client.get(reverse("lista_fletes"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "En curso")
+        self.assertContains(response, "Finalizado")
+        self.assertContains(response, "Cancelado")
+
+    def test_pendiente_de_cobro_sigue_diciendo_pendiente(self):
+        flete = self._crear_flete(timezone.localdate(), estado="finalizado")
+        flete.estado_cobro_cliente = "pendiente"
+        flete.save(update_fields=["estado_cobro_cliente"])
+
+        response = self.client.get(reverse("facturacion"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Pendiente de cobro")
+        self.assertContains(response, "Pendiente")
+        self.assertNotContains(response, "Reserva de cobro")

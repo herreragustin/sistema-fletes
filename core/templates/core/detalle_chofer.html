@@ -80,7 +80,7 @@
             {% for flete in ultimos_fletes %}
             <tr>
                 <td>{{ flete.fecha }}</td>
-                <td><span class="estado {{ flete.estado }}">{{ flete.get_estado_display }}</span></td>
+                <td><span class="estado {{ flete.estado }}">{{ flete|estado_flete_display }}</span></td>
                 <td>{{ flete.cliente.nombre|default:"-" }}</td>
                 <td>{{ flete.direccion_origen }}</td>
                 <td>{{ flete.direccion_destino }}</td>

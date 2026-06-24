@@ -85,7 +85,7 @@
                         <span class="muted">
                             {{ flete.chofer.nombre|default:"Sin chofer" }} |
                             {{ flete.direccion_origen }} a {{ flete.direccion_destino }} |
-                            <span class="estado {{ flete.estado }}">{{ flete.get_estado_display }}</span>
+                            <span class="estado {{ flete.estado }}">{{ flete|estado_flete_display }}</span>
                             {% if flete.fecha_hora_en_curso %}
                                 | Inicio real {{ flete.fecha_hora_en_curso|date:"H:i" }}
                             {% endif %}

@@ -44,7 +44,7 @@
         <label>Estado</label>
         <select name="estado" onchange="this.form.requestSubmit ? this.form.requestSubmit() : this.form.submit()">
             <option value="">Todos</option>
-            <option value="pendiente" {% if filtros.estado == "pendiente" %}selected{% endif %}>Pendiente</option>
+            <option value="pendiente" {% if filtros.estado == "pendiente" %}selected{% endif %}>Reserva</option>
             <option value="en_curso" {% if filtros.estado == "en_curso" %}selected{% endif %}>En curso</option>
             <option value="finalizado" {% if filtros.estado == "finalizado" %}selected{% endif %}>Finalizado</option>
             <option value="cancelado" {% if filtros.estado == "cancelado" %}selected{% endif %}>Cancelado</option>
@@ -121,7 +121,7 @@
             <td>{{ flete.fecha_hora_en_curso|date:"d/m/Y H:i"|default:"-" }}</td>
             <td>{{ flete.fecha_hora_finalizado|date:"d/m/Y H:i"|default:"-" }}</td>
             <td>{{ flete.duracion_formateada|default:"-" }}</td>
-            <td><span class="estado {{ flete.estado }}">{{ flete.get_estado_display }}</span></td>
+            <td><span class="estado {{ flete.estado }}">{{ flete|estado_flete_display }}</span></td>
             <td><span class="estado {{ flete.estado_cobro_cliente }}">{{ flete.get_estado_cobro_cliente_display }}</span></td>
             <td>{{ flete.fecha_cobro_cliente|date:"d/m/Y H:i"|default:"-" }}</td>
             <td class="acciones-tabla">

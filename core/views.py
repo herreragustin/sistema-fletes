@@ -316,7 +316,7 @@ def lista_fletes(request):
     for value, label in [
         ("", "Todos"),
         ("hoy", "Hoy"),
-        ("pendientes", "Pendientes"),
+        ("pendientes", "Reservas"),
         ("en_curso", "En curso"),
         ("finalizados", "Finalizados"),
         ("cancelados", "Cancelados"),

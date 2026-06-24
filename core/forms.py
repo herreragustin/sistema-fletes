@@ -92,6 +92,10 @@ class FleteForm(forms.ModelForm):
         self.fields["chofer"].error_messages["required"] = "Debe seleccionar un chofer"
         self.fields["fecha"].error_messages["required"] = "Debe ingresar una fecha"
         self.fields["hora_inicio"].label = "Hora programada"
+        self.fields["estado"].choices = [
+            ("pendiente", "Reserva") if value == "pendiente" else (value, label)
+            for value, label in self.fields["estado"].choices
+        ]
         self.fields["direccion_origen"].error_messages["required"] = "Debe ingresar un origen"
         self.fields["direccion_destino"].error_messages["required"] = "Debe ingresar un destino"
         self.fields["precio"].error_messages["required"] = "Debe ingresar un precio"

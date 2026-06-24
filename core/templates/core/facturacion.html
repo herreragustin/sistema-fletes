@@ -120,7 +120,7 @@
             <td>{{ flete.fecha_hora_en_curso|date:"d/m/Y H:i"|default:"-" }}</td>
             <td>{{ flete.fecha_hora_finalizado|date:"d/m/Y H:i"|default:"-" }}</td>
             <td>{{ flete.duracion_formateada|default:"-" }}</td>
-            <td><span class="estado {{ flete.estado }}">{{ flete.get_estado_display }}</span></td>
+            <td><span class="estado {{ flete.estado }}">{{ flete|estado_flete_display }}</span></td>
             <td>
                 <span class="estado {{ flete.estado_cobro_cliente }}">{{ flete.get_estado_cobro_cliente_display }}</span>
             </td>

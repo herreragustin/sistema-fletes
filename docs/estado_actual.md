@@ -37,7 +37,7 @@ Base tecnica actual:
   - estado de cobro
   - fecha de cobro
 - estados de flete:
-  - pendiente
+  - pendiente, mostrado al usuario como Reserva
   - en_curso
   - finalizado
   - cancelado

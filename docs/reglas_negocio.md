@@ -8,6 +8,10 @@ Flujo actual:
 - finalizado
 - cancelado
 
+El estado interno `pendiente` se mantiene en la base y en la logica del sistema.
+Visualmente, para el usuario se muestra como `Reserva`, porque representa un viaje reservado o programado.
+Esta etiqueta aplica solo al estado del flete. No cambia los textos ni la logica de cobros pendientes o pagos pendientes.
+
 Cuando pasa a `en_curso`:
 - guarda fecha y hora real de inicio
 - si se vuelve a poner en `en_curso`, reinicia ese horario real con el ultimo cambio valido
