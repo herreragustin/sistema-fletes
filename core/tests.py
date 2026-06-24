@@ -252,6 +252,24 @@ class ReservasRecurrentesTests(TestCase):
         self.assertContains(response, "No hay reservas cargadas para los proximos 7 dias.")
         self.assertEqual(len(response.context["reservas_futuras"]), 0)
 
+    def test_home_elimina_cards_duplicadas_y_conserva_operacion_diaria(self):
+        response = self.client.get(reverse("panel_inicio"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Panel operativo diario")
+        self.assertContains(response, "Fletes de hoy")
+        self.assertContains(response, "Reservas / proximos fletes")
+        self.assertContains(response, '<a href="/fletes/nuevo/" class="panel-hero-accion">Nuevo flete</a>', html=True)
+        self.assertContains(response, '<a href="/" class="secundario">Panel</a>', html=True)
+        self.assertContains(response, '<a href="/fletes/" class="secundario">Fletes</a>', html=True)
+        self.assertNotContains(response, "atajos-grid")
+        self.assertNotContains(response, "atajo-panel")
+        self.assertNotContains(response, "Administrar clientes")
+        self.assertNotContains(response, "Administrar choferes")
+        self.assertNotContains(response, "Seguimiento de cobros")
+        self.assertNotContains(response, "Pagos pendientes a choferes")
+        self.assertNotContains(response, "Fletes finalizados y cobro")
+
     def test_editar_flete_normal_sigue_funcionando(self):
         flete = Flete.objects.create(
             cliente=self.cliente,

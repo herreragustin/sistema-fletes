@@ -16,6 +16,11 @@
         border-radius: 8px;
         padding: 20px 22px;
         box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        display: flex;
+        justify-content: space-between;
+        gap: 14px;
+        align-items: center;
+        flex-wrap: wrap;
     }
 
     .panel-hero h1 {
@@ -27,31 +32,14 @@
         color: #4b5563;
     }
 
-    .atajos-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-        gap: 12px;
-    }
-
-    .atajo-panel {
-        background: white;
-        border: 1px solid #e5e7eb;
-        border-radius: 8px;
-        padding: 14px 16px;
+    .panel-hero-accion {
+        display: inline-block;
+        padding: 10px 14px;
+        background: #2563eb;
+        color: white;
         text-decoration: none;
-        color: #111827;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-    }
-
-    .atajo-panel strong,
-    .atajo-panel span {
-        display: block;
-    }
-
-    .atajo-panel span {
-        margin-top: 6px;
-        color: #6b7280;
-        font-size: 13px;
+        border-radius: 6px;
+        font-size: 14px;
     }
 
     .panel-seccion {
@@ -95,39 +83,11 @@
 
 <div class="panel-operativo">
     <section class="panel-hero">
-        <h1>Panel operativo diario</h1>
-        <p>Vista diaria de viajes para trabajar rapido sobre los fletes de hoy y las reservas proximas.</p>
-    </section>
-
-    <section class="atajos-grid">
-        <a href="{% url 'crear_flete' %}" class="atajo-panel">
-            <strong>Nuevo flete</strong>
-            <span>Cargar un viaje o reserva nueva</span>
-        </a>
-        <a href="{% url 'lista_fletes' %}" class="atajo-panel">
-            <strong>Fletes</strong>
-            <span>Ver el listado completo</span>
-        </a>
-        <a href="{% url 'lista_clientes' %}" class="atajo-panel">
-            <strong>Clientes</strong>
-            <span>Administrar clientes</span>
-        </a>
-        <a href="{% url 'lista_choferes' %}" class="atajo-panel">
-            <strong>Choferes</strong>
-            <span>Administrar choferes</span>
-        </a>
-        <a href="{% url 'cuenta_corriente_clientes' %}" class="atajo-panel">
-            <strong>Cuenta corriente</strong>
-            <span>Seguimiento de cobros</span>
-        </a>
-        <a href="{% url 'liquidacion_choferes' %}" class="atajo-panel">
-            <strong>Liquidaciones</strong>
-            <span>Pagos pendientes a choferes</span>
-        </a>
-        <a href="{% url 'facturacion' %}" class="atajo-panel">
-            <strong>Facturacion</strong>
-            <span>Fletes finalizados y cobro</span>
-        </a>
+        <div>
+            <h1>Panel operativo diario</h1>
+            <p>Vista diaria de viajes para trabajar rapido sobre los fletes de hoy y las reservas proximas.</p>
+        </div>
+        <a href="{% url 'crear_flete' %}" class="panel-hero-accion">Nuevo flete</a>
     </section>
 
     <section class="panel-seccion">
