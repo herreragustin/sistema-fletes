@@ -84,3 +84,190 @@ class FleteFormFechaHoraActualTests(TestCase):
         self.assertEqual(form.initial["hora_inicio"], time(16, 5))
         self.assertNotIn("hora_comienzo", form.initial)
         self.assertNotIn("hora_finalizacion", form.initial)
+
+
+class ReservasRecurrentesTests(TestCase):
+    def setUp(self):
+        self.cliente = Cliente.objects.create(
+            nombre="Cliente recurrente",
+            telefono="4444444444",
+            direccion="Origen recurrente",
+        )
+        self.chofer = Chofer.objects.create(
+            nombre="Chofer recurrente",
+            telefono="5555555555",
+            dni="66666666",
+            patente="REC123",
+        )
+
+    def _datos_flete(self, **overrides):
+        datos = {
+            "cliente": self.cliente.id,
+            "chofer": self.chofer.id,
+            "fecha": "2026-07-01",
+            "hora_inicio": "10:15",
+            "direccion_origen": "Deposito",
+            "direccion_destino": "Destino",
+            "ayudantes": "1",
+            "precio": "50000",
+            "forma_de_pago": "cuenta_corriente",
+            "estado": "pendiente",
+            "tipo_repeticion": "no_repetir",
+            "cantidad_repeticiones": "",
+        }
+        datos.update(overrides)
+        return datos
+
+    def test_crear_flete_sin_repeticion_crea_un_solo_flete(self):
+        response = self.client.post(reverse("crear_flete"), self._datos_flete())
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(Flete.objects.count(), 1)
+        flete = Flete.objects.get()
+        self.assertEqual(flete.estado, "pendiente")
+        self.assertEqual(flete.fecha, date(2026, 7, 1))
+        self.assertEqual(flete.hora_inicio, time(10, 15))
+
+    def test_crear_reserva_semanal_con_cuatro_repeticiones(self):
+        response = self.client.post(
+            reverse("crear_flete"),
+            self._datos_flete(tipo_repeticion="semanal", cantidad_repeticiones="4"),
+        )
+
+        self.assertEqual(response.status_code, 302)
+        fechas = list(Flete.objects.order_by("fecha").values_list("fecha", flat=True))
+        self.assertEqual(
+            fechas,
+            [
+                date(2026, 7, 1),
+                date(2026, 7, 8),
+                date(2026, 7, 15),
+                date(2026, 7, 22),
+            ],
+        )
+        self.assertEqual(Flete.objects.filter(estado="pendiente").count(), 4)
+        self.assertFalse(Flete.objects.exclude(fecha_hora_en_curso=None).exists())
+        self.assertFalse(Flete.objects.exclude(fecha_hora_finalizado=None).exists())
+        self.assertFalse(Flete.objects.filter(cobro__isnull=False).exists())
+
+    def test_crear_reserva_mensual_con_tres_repeticiones_ajusta_fin_de_mes(self):
+        response = self.client.post(
+            reverse("crear_flete"),
+            self._datos_flete(
+                fecha="2026-01-31",
+                tipo_repeticion="mensual",
+                cantidad_repeticiones="3",
+            ),
+        )
+
+        self.assertEqual(response.status_code, 302)
+        fechas = list(Flete.objects.order_by("fecha").values_list("fecha", flat=True))
+        self.assertEqual(
+            fechas,
+            [
+                date(2026, 1, 31),
+                date(2026, 2, 28),
+                date(2026, 3, 31),
+            ],
+        )
+
+    def test_reserva_recurrente_fuerza_estado_pendiente_y_no_copia_datos_reales(self):
+        response = self.client.post(
+            reverse("crear_flete"),
+            self._datos_flete(
+                tipo_repeticion="semanal",
+                cantidad_repeticiones="2",
+                estado="finalizado",
+            ),
+        )
+
+        self.assertEqual(response.status_code, 302)
+        for flete in Flete.objects.all():
+            self.assertEqual(flete.estado, "pendiente")
+            self.assertEqual(flete.estado_cobro_cliente, "no_exigible")
+            self.assertEqual(flete.estado_pago_chofer, "no_liquidable")
+            self.assertIsNone(flete.fecha_hora_en_curso)
+            self.assertIsNone(flete.fecha_hora_finalizado)
+            self.assertIsNone(flete.fecha_pago_chofer)
+            self.assertFalse(flete.pagado)
+
+    def test_limite_maximo_de_repeticiones(self):
+        form_semanal = FleteForm(
+            data=self._datos_flete(tipo_repeticion="semanal", cantidad_repeticiones="53")
+        )
+        form_mensual = FleteForm(
+            data=self._datos_flete(tipo_repeticion="mensual", cantidad_repeticiones="25")
+        )
+
+        self.assertFalse(form_semanal.is_valid())
+        self.assertIn("cantidad_repeticiones", form_semanal.errors)
+        self.assertFalse(form_mensual.is_valid())
+        self.assertIn("cantidad_repeticiones", form_mensual.errors)
+
+    def test_reservas_futuras_aparecen_en_home(self):
+        fecha_base = timezone.localdate() + timezone.timedelta(days=1)
+        self.client.post(
+            reverse("crear_flete"),
+            self._datos_flete(
+                fecha=fecha_base.isoformat(),
+                tipo_repeticion="semanal",
+                cantidad_repeticiones="2",
+            ),
+        )
+
+        response = self.client.get(reverse("panel_inicio"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.context["reservas_futuras"]), 2)
+
+    def test_editar_flete_normal_sigue_funcionando(self):
+        flete = Flete.objects.create(
+            cliente=self.cliente,
+            chofer=self.chofer,
+            fecha=date(2026, 7, 1),
+            hora_inicio=time(10, 15),
+            direccion_origen="Deposito",
+            direccion_destino="Destino",
+            ayudantes=1,
+            precio=Decimal("50000"),
+            forma_de_pago="cuenta_corriente",
+            estado="pendiente",
+        )
+
+        response = self.client.post(
+            reverse("editar_flete", args=[flete.id]),
+            self._datos_flete(
+                fecha="2026-07-02",
+                hora_inicio="11:45",
+                direccion_destino="Destino editado",
+            ),
+        )
+
+        flete.refresh_from_db()
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(flete.fecha, date(2026, 7, 2))
+        self.assertEqual(flete.hora_inicio, time(11, 45))
+        self.assertEqual(flete.direccion_destino, "Destino editado")
+
+    def test_duplicar_flete_guarda_un_flete_nuevo(self):
+        flete = Flete.objects.create(
+            cliente=self.cliente,
+            chofer=self.chofer,
+            fecha=date(2026, 7, 1),
+            hora_inicio=time(10, 15),
+            direccion_origen="Deposito",
+            direccion_destino="Destino",
+            ayudantes=1,
+            precio=Decimal("50000"),
+            forma_de_pago="cuenta_corriente",
+            estado="pendiente",
+        )
+
+        response = self.client.post(
+            reverse("duplicar_flete", args=[flete.id]),
+            self._datos_flete(fecha="2026-07-08", hora_inicio="12:00"),
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(Flete.objects.count(), 2)
+        self.assertTrue(Flete.objects.filter(fecha=date(2026, 7, 8), hora_inicio=time(12, 0)).exists())

@@ -31,6 +31,36 @@ Carga operativa:
 - en ese caso ambos horarios se guardan sobre la fecha del flete y se usan para calcular la duracion
 - la hora de finalizacion debe ser posterior a la hora de comienzo
 
+## Reservas recurrentes
+
+Al cargar un nuevo flete se puede indicar una repeticion simple:
+- no repetir
+- semanal
+- mensual
+
+La cantidad de repeticiones indica el total de reservas a crear.
+Por ejemplo:
+- semanal + 4 crea 4 fletes: el original y 3 reservas futuras, separadas por 7 dias
+- mensual + 3 crea 3 fletes: el original y 2 reservas futuras, mes a mes
+
+Reglas:
+- todas las reservas recurrentes se crean como fletes normales
+- todas quedan en estado `pendiente`
+- no copian hora real de inicio
+- no copian hora real de finalizacion
+- no copian duracion
+- no copian cobros realizados ni fechas de cobro
+- no copian pagos al chofer ni fechas de pago
+- al ser fletes pendientes, quedan con cobro cliente `no_exigible` y pago chofer `no_liquidable`
+
+Limites:
+- repeticion semanal: maximo 52 reservas
+- repeticion mensual: maximo 24 reservas
+
+Para repeticion mensual:
+- si el dia no existe en el mes destino, se usa el ultimo dia valido de ese mes
+- ejemplo: 31 de enero -> 28 o 29 de febrero, segun corresponda
+
 ## Cobro a clientes
 
 Cada flete tiene:

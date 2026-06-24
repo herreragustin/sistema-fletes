@@ -47,6 +47,12 @@ class ChoferForm(forms.ModelForm):
 
 
 class FleteForm(forms.ModelForm):
+    TIPO_REPETICION = [
+        ("no_repetir", "No repetir"),
+        ("semanal", "Semanal"),
+        ("mensual", "Mensual"),
+    ]
+
     hora_comienzo = forms.TimeField(
         required=False,
         label="Hora de comienzo",
@@ -56,6 +62,18 @@ class FleteForm(forms.ModelForm):
         required=False,
         label="Hora de finalizacion",
         widget=forms.TimeInput(format="%H:%M", attrs={"type": "time"}),
+    )
+    tipo_repeticion = forms.ChoiceField(
+        choices=TIPO_REPETICION,
+        required=False,
+        initial="no_repetir",
+        label="Tipo de repeticion",
+    )
+    cantidad_repeticiones = forms.IntegerField(
+        required=False,
+        min_value=1,
+        label="Cantidad de repeticiones",
+        widget=forms.NumberInput(attrs={"min": "1"}),
     )
 
     def __init__(self, *args, **kwargs):
@@ -119,7 +137,13 @@ class FleteForm(forms.ModelForm):
         estado = cleaned_data.get("estado")
         hora_comienzo = cleaned_data.get("hora_comienzo")
         hora_finalizacion = cleaned_data.get("hora_finalizacion")
+        tipo_repeticion = cleaned_data.get("tipo_repeticion") or "no_repetir"
+        cantidad_repeticiones = cleaned_data.get("cantidad_repeticiones")
         estado_anterior = self.instance.estado if self.instance and self.instance.pk else None
+
+        if tipo_repeticion != "no_repetir":
+            cleaned_data["estado"] = "pendiente"
+            estado = "pendiente"
 
         if "cliente" not in self.errors and not cliente:
             self.add_error("cliente", "Debe seleccionar un cliente")
@@ -141,6 +165,16 @@ class FleteForm(forms.ModelForm):
         if "chofer" not in self.errors and estado in {"en_curso", "finalizado"} and not chofer:
             mensaje = "No se puede iniciar un flete sin chofer asignado" if estado == "en_curso" else "No se puede finalizar un flete sin chofer asignado"
             self.add_error("chofer", mensaje)
+
+        if tipo_repeticion != "no_repetir":
+            if cantidad_repeticiones is None:
+                self.add_error("cantidad_repeticiones", "Debe ingresar la cantidad de repeticiones")
+            elif cantidad_repeticiones <= 0:
+                self.add_error("cantidad_repeticiones", "La cantidad de repeticiones debe ser mayor a cero")
+            elif tipo_repeticion == "semanal" and cantidad_repeticiones > 52:
+                self.add_error("cantidad_repeticiones", "Para repeticion semanal el maximo es 52")
+            elif tipo_repeticion == "mensual" and cantidad_repeticiones > 24:
+                self.add_error("cantidad_repeticiones", "Para repeticion mensual el maximo es 24")
 
         if estado == "finalizado":
             if not origen:

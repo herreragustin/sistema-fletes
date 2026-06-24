@@ -35,6 +35,23 @@
         {{ form.hora_inicio }}
         {% if form.hora_inicio.errors %}{{ form.hora_inicio.errors }}{% endif %}
     </p>
+    {% if mostrar_repeticion %}
+        <fieldset class="bloque-formulario">
+            <legend>Repeticion / Reserva recurrente</legend>
+            <p class="muted">Usar solo para reservas que se repiten semanal o mensualmente.</p>
+            <p>
+                {{ form.tipo_repeticion.label_tag }}
+                {{ form.tipo_repeticion }}
+                {% if form.tipo_repeticion.errors %}{{ form.tipo_repeticion.errors }}{% endif %}
+            </p>
+            <p>
+                {{ form.cantidad_repeticiones.label_tag }}
+                {{ form.cantidad_repeticiones }}
+                <span class="muted">Semanal: maximo 52. Mensual: maximo 24.</span>
+                {% if form.cantidad_repeticiones.errors %}{{ form.cantidad_repeticiones.errors }}{% endif %}
+            </p>
+        </fieldset>
+    {% endif %}
     <p>
         {{ form.direccion_origen.label_tag }}
         <div class="campo-autocomplete" data-campo="origen">
@@ -98,6 +115,9 @@
 (() => {
     const clienteSelect = document.getElementById("id_cliente");
     const estadoSelect = document.getElementById("id_estado");
+    const tipoRepeticionSelect = document.getElementById("id_tipo_repeticion");
+    const cantidadRepeticionesInput = document.getElementById("id_cantidad_repeticiones");
+    const formulario = document.querySelector(".formulario-principal");
     const origenInput = document.getElementById("id_direccion_origen");
     const destinoInput = document.getElementById("id_direccion_destino");
     const origenSugerencias = document.getElementById("sugerencias_origen");
@@ -190,6 +210,21 @@
         bloqueHorariosFinalizado.style.display = visible ? "block" : "none";
     };
 
+    const actualizarRepeticion = () => {
+        if (!tipoRepeticionSelect || !cantidadRepeticionesInput) {
+            return;
+        }
+
+        const tipo = tipoRepeticionSelect.value;
+        const hayRepeticion = tipo !== "no_repetir";
+        cantidadRepeticionesInput.required = hayRepeticion;
+        cantidadRepeticionesInput.disabled = !hayRepeticion;
+        cantidadRepeticionesInput.max = tipo === "semanal" ? "52" : tipo === "mensual" ? "24" : "";
+        if (!hayRepeticion) {
+            cantidadRepeticionesInput.value = "";
+        }
+    };
+
     document.addEventListener("click", (event) => {
         if (!event.target.closest(".campo-autocomplete")) {
             ocultarSugerencias(origenSugerencias);
@@ -201,8 +236,24 @@
     vincularAutocomplete(destinoInput, destinoSugerencias);
     clienteSelect.addEventListener("change", () => cargarDirecciones(clienteSelect.value));
     estadoSelect.addEventListener("change", actualizarBloqueHorarios);
+    if (tipoRepeticionSelect && cantidadRepeticionesInput) {
+        tipoRepeticionSelect.addEventListener("change", actualizarRepeticion);
+    }
+    if (formulario && tipoRepeticionSelect && cantidadRepeticionesInput) {
+        formulario.addEventListener("submit", (event) => {
+            const tipo = tipoRepeticionSelect.value;
+            const cantidad = Number.parseInt(cantidadRepeticionesInput.value, 10);
+            if (tipo !== "no_repetir" && cantidad > 0) {
+                const confirmado = confirm(`Se crearan ${cantidad} fletes recurrentes. Queres continuar?`);
+                if (!confirmado) {
+                    event.preventDefault();
+                }
+            }
+        });
+    }
     cargarDirecciones(clienteSelect.value);
     actualizarBloqueHorarios();
+    actualizarRepeticion();
 })();
 </script>
 {% endblock %}

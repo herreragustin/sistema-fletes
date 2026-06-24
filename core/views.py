@@ -1,7 +1,9 @@
+from calendar import monthrange
 from datetime import timedelta
 from decimal import Decimal
 from urllib.parse import urlencode
 
+from django.db import transaction
 from django.db.models import Count, DecimalField, Q, Sum, Value
 from django.db.models.functions import Coalesce
 from django.contrib import messages
@@ -15,6 +17,69 @@ from .forms import ClienteForm, ChoferForm, FleteForm
 
 def _sumar_importe_chofer(fletes):
     return sum((flete.importe_chofer for flete in fletes), Decimal("0"))
+
+
+def _sumar_meses(fecha, meses):
+    mes_base = fecha.month - 1 + meses
+    anio = fecha.year + mes_base // 12
+    mes = mes_base % 12 + 1
+    dia = min(fecha.day, monthrange(anio, mes)[1])
+    return fecha.replace(year=anio, month=mes, day=dia)
+
+
+def _fecha_recurrente(fecha_base, tipo_repeticion, indice):
+    if tipo_repeticion == "semanal":
+        return fecha_base + timedelta(days=7 * indice)
+    if tipo_repeticion == "mensual":
+        return _sumar_meses(fecha_base, indice)
+    return fecha_base
+
+
+def _crear_reservas_recurrentes(flete_base, tipo_repeticion, cantidad):
+    if tipo_repeticion == "no_repetir" or cantidad <= 1:
+        return []
+
+    reservas = []
+    for indice in range(1, cantidad):
+        reserva = Flete(
+            cliente=flete_base.cliente,
+            chofer=flete_base.chofer,
+            fecha=_fecha_recurrente(flete_base.fecha, tipo_repeticion, indice),
+            hora_inicio=flete_base.hora_inicio,
+            direccion_origen=flete_base.direccion_origen,
+            direccion_destino=flete_base.direccion_destino,
+            ayudantes=flete_base.ayudantes,
+            precio=flete_base.precio,
+            forma_de_pago=flete_base.forma_de_pago,
+            estado="pendiente",
+        )
+        reserva.save()
+        reservas.append(reserva)
+
+    return reservas
+
+
+def _guardar_flete_con_repeticion(form):
+    tipo_repeticion = form.cleaned_data.get("tipo_repeticion") or "no_repetir"
+    cantidad_repeticiones = form.cleaned_data.get("cantidad_repeticiones") or 1
+    with transaction.atomic():
+        flete = form.save(commit=False)
+        if tipo_repeticion != "no_repetir":
+            flete.estado = "pendiente"
+            flete.fecha_hora_en_curso = None
+            flete.fecha_hora_finalizado = None
+            flete.estado_cobro_cliente = "no_exigible"
+            flete.estado_pago_chofer = "no_liquidable"
+            flete.fecha_pago_chofer = None
+            flete.pagado = False
+        flete.save()
+        reservas = _crear_reservas_recurrentes(
+            flete,
+            tipo_repeticion,
+            cantidad_repeticiones,
+        )
+
+    return flete, reservas, tipo_repeticion
 
 
 def _direcciones_cliente(cliente, limite=20):
@@ -286,7 +351,10 @@ def crear_flete(request):
     if request.method == "POST":
         form = FleteForm(request.POST)
         if form.is_valid():
-            form.save()
+            _flete, reservas, tipo_repeticion = _guardar_flete_con_repeticion(form)
+            if tipo_repeticion != "no_repetir":
+                total_creadas = len(reservas) + 1
+                messages.success(request, f"Se crearon {total_creadas} reservas recurrentes.")
             return redirect("lista_fletes")
     else:
         form = FleteForm()
@@ -295,29 +363,40 @@ def crear_flete(request):
         "form": form,
         "titulo": "Nuevo flete",
         "texto_boton": "Crear flete",
+        "mostrar_repeticion": True,
     })
 
 
 def duplicar_flete(request, flete_id):
     flete = get_object_or_404(Flete, id=flete_id)
     ahora_local = timezone.localtime()
-    form = FleteForm(initial={
-        "cliente": flete.cliente_id,
-        "chofer": flete.chofer_id,
-        "fecha": ahora_local.date(),
-        "hora_inicio": ahora_local.time().replace(second=0, microsecond=0),
-        "direccion_origen": flete.direccion_origen,
-        "direccion_destino": flete.direccion_destino,
-        "ayudantes": flete.ayudantes,
-        "precio": flete.precio,
-        "forma_de_pago": flete.forma_de_pago,
-        "estado": "pendiente",
-    })
+    if request.method == "POST":
+        form = FleteForm(request.POST)
+        if form.is_valid():
+            _flete, reservas, tipo_repeticion = _guardar_flete_con_repeticion(form)
+            if tipo_repeticion != "no_repetir":
+                total_creadas = len(reservas) + 1
+                messages.success(request, f"Se crearon {total_creadas} reservas recurrentes.")
+            return redirect("lista_fletes")
+    else:
+        form = FleteForm(initial={
+            "cliente": flete.cliente_id,
+            "chofer": flete.chofer_id,
+            "fecha": ahora_local.date(),
+            "hora_inicio": ahora_local.time().replace(second=0, microsecond=0),
+            "direccion_origen": flete.direccion_origen,
+            "direccion_destino": flete.direccion_destino,
+            "ayudantes": flete.ayudantes,
+            "precio": flete.precio,
+            "forma_de_pago": flete.forma_de_pago,
+            "estado": "pendiente",
+        })
 
     return render(request, "core/formulario_flete.html", {
         "form": form,
         "titulo": f"Duplicar flete #{flete.id}",
         "texto_boton": "Crear flete",
+        "mostrar_repeticion": True,
     })
 
 
@@ -382,6 +461,7 @@ def editar_flete(request, flete_id):
         "flete": flete,
         "titulo": f"Editar flete #{flete.id}",
         "texto_boton": "Guardar cambios",
+        "mostrar_repeticion": False,
     })
 
 

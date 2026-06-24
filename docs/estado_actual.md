@@ -29,6 +29,7 @@ Base tecnica actual:
 - alta y edicion de clientes
 - alta y edicion de choferes
 - alta y edicion de fletes
+- generacion de reservas recurrentes semanales y mensuales desde nuevo flete
 - filtros en listados
 - listado de Fletes con informacion operativa ampliada:
   - horarios reales
