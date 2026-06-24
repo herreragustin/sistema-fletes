@@ -78,6 +78,11 @@ class FleteForm(forms.ModelForm):
         self.fields["direccion_destino"].error_messages["required"] = "Debe ingresar un destino"
         self.fields["precio"].error_messages["required"] = "Debe ingresar un precio"
 
+        if not self.is_bound and not self.instance.pk:
+            ahora_local = timezone.localtime()
+            self.initial.setdefault("fecha", ahora_local.date())
+            self.initial.setdefault("hora_inicio", ahora_local.time().replace(second=0, microsecond=0))
+
         if self.instance.pk:
             if self.instance.fecha_hora_en_curso:
                 self.initial["hora_comienzo"] = timezone.localtime(self.instance.fecha_hora_en_curso).strftime("%H:%M")

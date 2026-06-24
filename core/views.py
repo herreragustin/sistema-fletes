@@ -300,11 +300,12 @@ def crear_flete(request):
 
 def duplicar_flete(request, flete_id):
     flete = get_object_or_404(Flete, id=flete_id)
+    ahora_local = timezone.localtime()
     form = FleteForm(initial={
         "cliente": flete.cliente_id,
         "chofer": flete.chofer_id,
-        "fecha": timezone.localdate(),
-        "hora_inicio": flete.hora_inicio,
+        "fecha": ahora_local.date(),
+        "hora_inicio": ahora_local.time().replace(second=0, microsecond=0),
         "direccion_origen": flete.direccion_origen,
         "direccion_destino": flete.direccion_destino,
         "ayudantes": flete.ayudantes,
