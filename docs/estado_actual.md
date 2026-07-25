@@ -103,6 +103,7 @@ Base tecnica actual:
 - incluye clientes historicos, choferes historicos, viajes historicos y reservas historicas
 - los datos historicos no se mezclan con clientes, choferes ni fletes operativos actuales
 - la importacion usa parser con fallback de aliases para recuperar correctamente origen y destino
+- el mapeo de choferes historicos fue corregido inspeccionando `CHOFERES.DBF` para usar apellido real desde `APELL` y nombre desde `NOMBRE`
 
 ## Partes mas consolidadas
 

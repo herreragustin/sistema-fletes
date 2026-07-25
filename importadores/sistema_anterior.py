@@ -325,7 +325,7 @@ class SistemaAnteriorImporter:
             try:
                 codigo_base = self._text(record, "codigo", "MOVIL") or f"{path.name}:{index}"
                 codigo = self._unique_codigo("choferes", codigo_base, path.name, index)
-                nombre = " ".join(part for part in [self._text(record, "nombre", "APELL"), self._text(record, "nombre", "NOMBRE")] if part)
+                nombre = self._build_chofer_nombre(record)
                 rows.append({
                     "codigo_legacy": codigo,
                     "nombre": nombre or f"Chofer legacy {codigo}",
@@ -469,6 +469,46 @@ class SistemaAnteriorImporter:
         localidad = self._value_as_text(record.get("LOCALIDAD"))
         direccion = self._join_parts(calle, numero, piso, dto)
         return f"{direccion} - {localidad}" if direccion and localidad else (direccion or localidad)
+
+    def _build_chofer_nombre(self, record):
+        apellido = self._value_as_text(record.get("APELL"))
+        nombre = self._value_as_text(record.get("NOMBRE"))
+
+        if nombre:
+            nombre = self._clean_chofer_nombre_noise(
+                nombre=nombre,
+                patente=self._value_as_text(record.get("NROPAT")),
+                referencia=self._value_as_text(record.get("REFEREN")),
+            )
+
+        if nombre and apellido:
+            return self._join_parts(nombre, apellido)
+        return nombre or apellido
+
+    def _clean_chofer_nombre_noise(self, nombre, patente="", referencia=""):
+        patente_normalizada = self._normalize_compact_token(patente)
+        tokens = [token for token in nombre.split() if token]
+
+        cleaned_tokens = []
+        for token in tokens:
+            token_normalizado = self._normalize_compact_token(token)
+            if patente_normalizada and token_normalizado == patente_normalizada:
+                continue
+            cleaned_tokens.append(token)
+
+        if referencia:
+            referencia_normalizada = self._normalize_compact_token(referencia.replace("DOMINIO", " "))
+            if referencia_normalizada:
+                cleaned_tokens = [
+                    token for token in cleaned_tokens
+                    if self._normalize_compact_token(token) != referencia_normalizada
+                ]
+
+        return " ".join(cleaned_tokens).strip()
+
+    def _normalize_compact_token(self, value):
+        text = self._value_as_text(value).upper()
+        return "".join(ch for ch in text if ch.isalnum())
 
     def _parse_date(self, value):
         if value in (None, ""):

@@ -37,6 +37,28 @@ Se corrigio la resolucion de aliases para que:
 
 Tambien se agrego `HASTAORI` como alias posible de destino.
 
+## Correccion de nombres de choferes historicos
+
+Luego de la primera importacion historica se detecto que algunos choferes quedaban con el nombre duplicado, por ejemplo:
+
+- `GASTON ADRIAN GASTON ADRIAN`
+
+Se inspecciono `CHOFERES.DBF` y se verifico que:
+- `NOMBRE` contiene el nombre de pila o nombres
+- `APELL` contiene el apellido real
+
+Por eso se corrigio el mapeo de choferes historicos para:
+- priorizar `NOMBRE` + `APELL`
+- evitar reutilizar el mismo alias para ambos componentes
+- limpiar texto accesorio que en algunos casos mezclaba dominio/patente dentro del nombre
+
+Ejemplos corregidos:
+- `GASTON ADRIAN HERRERA`
+- `DIEGO PERALTA`
+- `JUAN CARLOS BERAGHI`
+- `CRISTIAN ARIEL DI CUGNO`
+- `CRISTIAN MAXI RONDONA`
+
 ## Resultado de la correccion de aliases
 
 Antes de la correccion:
