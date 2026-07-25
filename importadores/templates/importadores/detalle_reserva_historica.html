@@ -1,0 +1,32 @@
+{% extends "core/base_panel.html" %}
+
+{% block title %}Reserva historica{% endblock %}
+
+{% block content %}
+<h1>Reserva historica {{ reserva.codigo_legacy }}</h1>
+{% include "importadores/_nota_solo_consulta.html" %}
+
+<div class="acciones">
+    <a href="{% url 'importadores:lista_reservas_historicas' %}" class="secundario">Volver</a>
+</div>
+
+<div class="resumen-total">
+    <div><span>Fecha</span><strong>{{ reserva.fecha|date:"d/m/Y"|default:"-" }}</strong></div>
+    <div><span>Hora</span><strong>{{ reserva.hora|time:"H:i"|default:"-" }}</strong></div>
+    <div><span>Importe</span><strong>${{ reserva.importe|miles_punto }}</strong></div>
+    <div><span>Estado</span><strong>{{ reserva.get_estado_display }}</strong></div>
+</div>
+
+<div class="sin-datos">
+    <p><strong>Cliente:</strong> {{ reserva.cliente.nombre|default:reserva.cliente_codigo_legacy|default:"Sin relacion" }}</p>
+    <p><strong>Chofer:</strong> {{ reserva.chofer.nombre|default:reserva.chofer_codigo_legacy|default:"Sin relacion" }}</p>
+    <p><strong>Origen:</strong> {{ reserva.origen|default:"-" }}</p>
+    <p><strong>Destino:</strong> {{ reserva.destino|default:"-" }}</p>
+    <p><strong>Observaciones:</strong> {{ reserva.observaciones|default:"-" }}</p>
+    <p><strong>Archivo origen:</strong> {{ reserva.origen_legacy|default:"-" }}</p>
+    <details>
+        <summary>Ver datos originales</summary>
+        <pre>{{ reserva.datos_legacy }}</pre>
+    </details>
+</div>
+{% endblock %}

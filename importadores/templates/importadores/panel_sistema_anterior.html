@@ -1,0 +1,69 @@
+{% extends "core/base_panel.html" %}
+
+{% block title %}Sistema anterior{% endblock %}
+
+{% block content %}
+<h1>Sistema anterior</h1>
+{% include "importadores/_nota_solo_consulta.html" %}
+
+<div class="resumen-total">
+    <div>
+        <span>Clientes</span>
+        <strong>{{ clientes_count }}</strong>
+    </div>
+    <div>
+        <span>Choferes</span>
+        <strong>{{ choferes_count }}</strong>
+    </div>
+    <div>
+        <span>Viajes</span>
+        <strong>{{ viajes_count }}</strong>
+    </div>
+    <div>
+        <span>Reservas</span>
+        <strong>{{ reservas_count }}</strong>
+    </div>
+</div>
+
+<div class="acciones">
+    <a href="{% url 'importadores:lista_clientes_historicos' %}">Clientes</a>
+    <a href="{% url 'importadores:lista_choferes_historicos' %}" class="secundario">Choferes</a>
+    <a href="{% url 'importadores:lista_viajes_historicos' %}" class="secundario">Viajes</a>
+    <a href="{% url 'importadores:lista_reservas_historicas' %}" class="secundario">Reservas</a>
+    <a href="{% url 'importadores:lista_legacy_dbf' %}" class="secundario">Explorar DBF</a>
+</div>
+
+<div class="dashboard-grid">
+    <section class="dashboard-bloque">
+        <h2>Ultimos viajes importados</h2>
+        {% if ultimos_viajes %}
+            <div class="lista-resumen">
+                {% for viaje in ultimos_viajes %}
+                    <div class="lista-resumen-item">
+                        <strong>{{ viaje.codigo_legacy }}</strong><br>
+                        <span class="muted">{{ viaje.fecha|date:"d/m/Y"|default:"-" }} {{ viaje.hora|time:"H:i"|default:"" }} | {{ viaje.cliente.nombre|default:viaje.cliente_codigo_legacy|default:"Sin cliente" }} | {{ viaje.origen|default:"-" }} a {{ viaje.destino|default:"-" }}</span>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="sin-datos">Todavia no hay viajes historicos cargados.</div>
+        {% endif %}
+    </section>
+
+    <section class="dashboard-bloque">
+        <h2>Ultimas reservas importadas</h2>
+        {% if ultimas_reservas %}
+            <div class="lista-resumen">
+                {% for reserva in ultimas_reservas %}
+                    <div class="lista-resumen-item">
+                        <strong>{{ reserva.codigo_legacy }}</strong><br>
+                        <span class="muted">{{ reserva.fecha|date:"d/m/Y"|default:"-" }} {{ reserva.hora|time:"H:i"|default:"" }} | {{ reserva.cliente.nombre|default:reserva.cliente_codigo_legacy|default:"Sin cliente" }} | {{ reserva.origen|default:"-" }} a {{ reserva.destino|default:"-" }}</span>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="sin-datos">Todavia no hay reservas historicas cargadas.</div>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}

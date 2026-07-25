@@ -22,6 +22,7 @@ Base tecnica actual:
 - Liquidacion de choferes
 - Reportes
 - Importadores DBF aislados
+- Sistema anterior - solo consulta
 
 ## Funcionalidades implementadas
 
@@ -96,6 +97,13 @@ Base tecnica actual:
 - pagado / pendiente chofer
 - resultado estimado general
 
+### Sistema anterior
+- se importaron datos historicos del sistema anterior en tablas separadas del modulo `importadores`
+- la seccion historica es solo consulta y se navega desde `Sistema anterior`
+- incluye clientes historicos, choferes historicos, viajes historicos y reservas historicas
+- los datos historicos no se mezclan con clientes, choferes ni fletes operativos actuales
+- la importacion usa parser con fallback de aliases para recuperar correctamente origen y destino
+
 ## Partes mas consolidadas
 
 - flujo operativo de fletes
@@ -104,6 +112,7 @@ Base tecnica actual:
 - cierres simples
 - navegacion principal
 - backup previo a limpieza de datos demo
+- consulta historica del sistema anterior separada de la operacion actual
 
 ## Partes pendientes o mejorables
 

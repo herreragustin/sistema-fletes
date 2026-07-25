@@ -1,0 +1,33 @@
+{% extends "core/base_panel.html" %}
+
+{% block title %}Chofer historico{% endblock %}
+
+{% block content %}
+<h1>{{ chofer.nombre }}</h1>
+{% include "importadores/_nota_solo_consulta.html" %}
+
+<div class="acciones">
+    <a href="{% url 'importadores:lista_choferes_historicos' %}" class="secundario">Volver</a>
+</div>
+
+<div class="resumen-total">
+    <div><span>Codigo legacy</span><strong>{{ chofer.codigo_legacy }}</strong></div>
+    <div><span>Telefono</span><strong>{{ chofer.telefono|default:"-" }}</strong></div>
+    <div><span>Patente</span><strong>{{ chofer.patente|default:"-" }}</strong></div>
+</div>
+
+<div class="sin-datos">
+    <p><strong>Vehiculo:</strong> {{ chofer.vehiculo|default:"-" }}</p>
+    <p><strong>DNI:</strong> {{ chofer.dni|default:"-" }}</p>
+    <p><strong>Registro:</strong> {{ chofer.registro|default:"-" }}</p>
+    <p><strong>Direccion:</strong> {{ chofer.direccion|default:"-" }}</p>
+    <p><strong>Estado:</strong> {{ chofer.estado|default:"-"|title }}</p>
+    <p><strong>Origen legacy:</strong> {{ chofer.origen_legacy|default:"-" }}</p>
+    <p><strong>Viajes relacionados:</strong> {{ viajes|length }}</p>
+    <p><strong>Reservas relacionadas:</strong> {{ reservas|length }}</p>
+    <details>
+        <summary>Ver datos originales</summary>
+        <pre>{{ chofer.datos_legacy }}</pre>
+    </details>
+</div>
+{% endblock %}

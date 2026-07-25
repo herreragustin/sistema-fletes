@@ -4,6 +4,7 @@
 
 {% block content %}
 <h1>{{ archivo }}</h1>
+{% include "importadores/_nota_solo_consulta.html" %}
 
 <div class="acciones" style="margin-bottom:20px;">
     <a href="{% url 'importadores:lista_legacy_dbf' %}" class="secundario">Volver</a>

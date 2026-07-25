@@ -1,0 +1,11 @@
+{% if page_obj.paginator.num_pages > 1 %}
+<div class="acciones">
+    {% if page_obj.has_previous %}
+        <a href="?{% for key, value in request.GET.items %}{% if key != 'pagina' %}{{ key }}={{ value|urlencode }}&{% endif %}{% endfor %}pagina={{ page_obj.previous_page_number }}" class="secundario">Anterior</a>
+    {% endif %}
+    <span class="muted">Pagina {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+    {% if page_obj.has_next %}
+        <a href="?{% for key, value in request.GET.items %}{% if key != 'pagina' %}{{ key }}={{ value|urlencode }}&{% endif %}{% endfor %}pagina={{ page_obj.next_page_number }}" class="secundario">Siguiente</a>
+    {% endif %}
+</div>
+{% endif %}

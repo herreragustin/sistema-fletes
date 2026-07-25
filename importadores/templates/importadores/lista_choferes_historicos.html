@@ -1,0 +1,61 @@
+{% extends "core/base_panel.html" %}
+
+{% block title %}Choferes historicos{% endblock %}
+
+{% block content %}
+<h1>Choferes historicos</h1>
+{% include "importadores/_nota_solo_consulta.html" %}
+
+<form method="get" class="filtros">
+    <div class="filtros-campo filtros-campo-texto">
+        <label>Buscar</label>
+        <input type="search" name="q" value="{{ filtros.q }}" placeholder="Nombre, telefono, patente o codigo">
+    </div>
+    <div class="filtros-campo">
+        <label>Estado</label>
+        <select name="estado">
+            <option value="">Todos</option>
+            <option value="activo" {% if filtros.estado == "activo" %}selected{% endif %}>Activo</option>
+            <option value="inactivo" {% if filtros.estado == "inactivo" %}selected{% endif %}>Inactivo</option>
+        </select>
+    </div>
+    <div class="filtros-acciones">
+        <button type="submit">Filtrar</button>
+        <a href="{% url 'importadores:lista_choferes_historicos' %}" class="btn-secundario">Limpiar</a>
+    </div>
+</form>
+
+<p class="muted">Registros encontrados: {{ total }}</p>
+
+{% if page_obj.object_list %}
+<table>
+    <thead>
+        <tr>
+            <th>Codigo legacy</th>
+            <th>Nombre</th>
+            <th>Telefono</th>
+            <th>Patente</th>
+            <th>Vehiculo</th>
+            <th>Estado</th>
+            <th>Detalle</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for chofer in page_obj.object_list %}
+        <tr>
+            <td>{{ chofer.codigo_legacy }}</td>
+            <td>{{ chofer.nombre }}</td>
+            <td>{{ chofer.telefono|default:"-" }}</td>
+            <td>{{ chofer.patente|default:"-" }}</td>
+            <td>{{ chofer.vehiculo|default:"-" }}</td>
+            <td><span class="estado {{ chofer.estado|default:'sin_estado' }}">{{ chofer.estado|default:"-"|title }}</span></td>
+            <td><a href="{% url 'importadores:detalle_chofer_historico' chofer.id %}">Ver</a></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% include "importadores/_paginacion.html" with page_obj=page_obj %}
+{% else %}
+<div class="sin-datos">No hay choferes historicos cargados.</div>
+{% endif %}
+{% endblock %}

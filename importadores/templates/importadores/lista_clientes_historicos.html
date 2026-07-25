@@ -1,0 +1,59 @@
+{% extends "core/base_panel.html" %}
+
+{% block title %}Clientes historicos{% endblock %}
+
+{% block content %}
+<h1>Clientes historicos</h1>
+{% include "importadores/_nota_solo_consulta.html" %}
+
+<form method="get" class="filtros">
+    <div class="filtros-campo filtros-campo-texto">
+        <label>Buscar</label>
+        <input type="search" name="q" value="{{ filtros.q }}" placeholder="Nombre, telefono, direccion o codigo">
+    </div>
+    <div class="filtros-campo">
+        <label>Activo</label>
+        <select name="activo">
+            <option value="">Todos</option>
+            <option value="1" {% if filtros.activo == "1" %}selected{% endif %}>Activos</option>
+            <option value="0" {% if filtros.activo == "0" %}selected{% endif %}>Inactivos</option>
+        </select>
+    </div>
+    <div class="filtros-acciones">
+        <button type="submit">Filtrar</button>
+        <a href="{% url 'importadores:lista_clientes_historicos' %}" class="btn-secundario">Limpiar</a>
+    </div>
+</form>
+
+<p class="muted">Registros encontrados: {{ total }}</p>
+
+{% if page_obj.object_list %}
+<table>
+    <thead>
+        <tr>
+            <th>Codigo legacy</th>
+            <th>Nombre</th>
+            <th>Telefono</th>
+            <th>Direccion</th>
+            <th>Estado</th>
+            <th>Detalle</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for cliente in page_obj.object_list %}
+        <tr>
+            <td>{{ cliente.codigo_legacy }}</td>
+            <td>{{ cliente.nombre }}</td>
+            <td>{{ cliente.telefono|default:"-" }}</td>
+            <td>{{ cliente.direccion|default:"-" }}</td>
+            <td><span class="estado {% if cliente.activo %}activo{% else %}inactivo{% endif %}">{% if cliente.activo %}Activo{% else %}Inactivo{% endif %}</span></td>
+            <td><a href="{% url 'importadores:detalle_cliente_historico' cliente.id %}">Ver</a></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% include "importadores/_paginacion.html" with page_obj=page_obj %}
+{% else %}
+<div class="sin-datos">No hay clientes historicos cargados.</div>
+{% endif %}
+{% endblock %}

@@ -159,3 +159,23 @@ La Home responde a:
 Las reservas con fecha posterior a esos 7 dias no se muestran en la Home, pero no se modifican ni se eliminan. Siguen disponibles en el listado general de Fletes y mediante filtros por fecha.
 
 No busca ser un dashboard complejo.
+
+## Sistema anterior - solo consulta
+
+Los datos importados desde el sistema anterior:
+- no forman parte de los modelos operativos actuales
+- no se usan en los formularios de Cliente, Chofer ni Flete
+- no participan en Facturacion, Cuenta corriente, Liquidacion ni Reportes operativos
+
+Se almacenan unicamente en tablas historicas separadas:
+- `ClienteHistorico`
+- `ChoferHistorico`
+- `ViajeHistorico`
+- `ReservaHistorica`
+
+La importacion historica:
+- reutiliza DBF del sistema anterior
+- aplica fallback de aliases para tomar el primer valor util por campo
+- recupera origen y destino desde campos alternativos como `DESDE` y `DESTINO` cuando `DESDEORI` o `DESTIORI` vienen vacios
+
+La seccion historica es exclusivamente de consulta.

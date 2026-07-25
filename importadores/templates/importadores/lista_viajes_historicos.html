@@ -1,0 +1,78 @@
+{% extends "core/base_panel.html" %}
+
+{% block title %}Viajes historicos del sistema anterior{% endblock %}
+
+{% block content %}
+<h1>Viajes historicos</h1>
+{% include "importadores/_nota_solo_consulta.html" %}
+
+<form method="get" class="filtros">
+    <div class="filtros-campo filtros-campo-texto">
+        <label>Buscar</label>
+        <input type="search" name="q" value="{{ filtros.q }}" placeholder="Codigo, cliente, chofer, origen o destino">
+    </div>
+    <div class="filtros-campo">
+        <label>Estado</label>
+        <select name="estado">
+            <option value="">Todos</option>
+            {% for value, label in estados %}
+                <option value="{{ value }}" {% if filtros.estado == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="filtros-campo">
+        <label>Desde</label>
+        <input type="date" name="fecha_desde" value="{{ filtros.fecha_desde }}">
+    </div>
+    <div class="filtros-campo">
+        <label>Hasta</label>
+        <input type="date" name="fecha_hasta" value="{{ filtros.fecha_hasta }}">
+    </div>
+    <div class="filtros-acciones">
+        <button type="submit">Filtrar</button>
+        <a href="{% url 'importadores:lista_viajes_historicos' %}" class="btn-secundario">Limpiar</a>
+    </div>
+</form>
+
+<p class="muted">Registros encontrados: {{ total }}</p>
+
+{% if page_obj.object_list %}
+<div class="tabla-scroll">
+<table>
+    <thead>
+        <tr>
+            <th>Codigo legacy</th>
+            <th>Fecha</th>
+            <th>Hora</th>
+            <th>Cliente</th>
+            <th>Chofer</th>
+            <th>Origen</th>
+            <th>Destino</th>
+            <th>Importe</th>
+            <th>Estado</th>
+            <th>Detalle</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for viaje in page_obj.object_list %}
+        <tr>
+            <td>{{ viaje.codigo_legacy }}</td>
+            <td>{{ viaje.fecha|date:"d/m/Y"|default:"-" }}</td>
+            <td>{{ viaje.hora|time:"H:i"|default:"-" }}</td>
+            <td>{{ viaje.cliente.nombre|default:viaje.cliente_codigo_legacy|default:"Sin relacion" }}</td>
+            <td>{{ viaje.chofer.nombre|default:viaje.chofer_codigo_legacy|default:"Sin relacion" }}</td>
+            <td>{{ viaje.origen|default:"-" }}</td>
+            <td>{{ viaje.destino|default:"-" }}</td>
+            <td>${{ viaje.importe|miles_punto }}</td>
+            <td><span class="estado {{ viaje.estado }}">{{ viaje.get_estado_display }}</span></td>
+            <td><a href="{% url 'importadores:detalle_viaje_historico' viaje.id %}">Ver</a></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>
+{% include "importadores/_paginacion.html" with page_obj=page_obj %}
+{% else %}
+<div class="sin-datos">No hay viajes historicos cargados.</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,32 @@
+{% extends "core/base_panel.html" %}
+
+{% block title %}Viaje historico{% endblock %}
+
+{% block content %}
+<h1>Viaje historico {{ viaje.codigo_legacy }}</h1>
+{% include "importadores/_nota_solo_consulta.html" %}
+
+<div class="acciones">
+    <a href="{% url 'importadores:lista_viajes_historicos' %}" class="secundario">Volver</a>
+</div>
+
+<div class="resumen-total">
+    <div><span>Fecha</span><strong>{{ viaje.fecha|date:"d/m/Y"|default:"-" }}</strong></div>
+    <div><span>Hora</span><strong>{{ viaje.hora|time:"H:i"|default:"-" }}</strong></div>
+    <div><span>Importe</span><strong>${{ viaje.importe|miles_punto }}</strong></div>
+    <div><span>Estado</span><strong>{{ viaje.get_estado_display }}</strong></div>
+</div>
+
+<div class="sin-datos">
+    <p><strong>Cliente:</strong> {{ viaje.cliente.nombre|default:viaje.cliente_codigo_legacy|default:"Sin relacion" }}</p>
+    <p><strong>Chofer:</strong> {{ viaje.chofer.nombre|default:viaje.chofer_codigo_legacy|default:"Sin relacion" }}</p>
+    <p><strong>Origen:</strong> {{ viaje.origen|default:"-" }}</p>
+    <p><strong>Destino:</strong> {{ viaje.destino|default:"-" }}</p>
+    <p><strong>Observaciones:</strong> {{ viaje.observaciones|default:"-" }}</p>
+    <p><strong>Archivo origen:</strong> {{ viaje.origen_legacy|default:"-" }}</p>
+    <details>
+        <summary>Ver datos originales</summary>
+        <pre>{{ viaje.datos_legacy }}</pre>
+    </details>
+</div>
+{% endblock %}

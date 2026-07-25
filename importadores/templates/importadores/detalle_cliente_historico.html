@@ -1,0 +1,30 @@
+{% extends "core/base_panel.html" %}
+
+{% block title %}Cliente historico{% endblock %}
+
+{% block content %}
+<h1>{{ cliente.nombre }}</h1>
+{% include "importadores/_nota_solo_consulta.html" %}
+
+<div class="acciones">
+    <a href="{% url 'importadores:lista_clientes_historicos' %}" class="secundario">Volver</a>
+</div>
+
+<div class="resumen-total">
+    <div><span>Codigo legacy</span><strong>{{ cliente.codigo_legacy }}</strong></div>
+    <div><span>Telefono</span><strong>{{ cliente.telefono|default:"-" }}</strong></div>
+    <div><span>Estado</span><strong>{% if cliente.activo %}Activo{% else %}Inactivo{% endif %}</strong></div>
+</div>
+
+<div class="sin-datos">
+    <p><strong>Direccion:</strong> {{ cliente.direccion|default:"-" }}</p>
+    <p><strong>Origen legacy:</strong> {{ cliente.origen_legacy|default:"-" }}</p>
+    <p><strong>Observaciones:</strong> {{ cliente.observaciones|default:"-" }}</p>
+    <p><strong>Viajes relacionados:</strong> {{ viajes|length }}</p>
+    <p><strong>Reservas relacionadas:</strong> {{ reservas|length }}</p>
+    <details>
+        <summary>Ver datos originales</summary>
+        <pre>{{ cliente.datos_legacy }}</pre>
+    </details>
+</div>
+{% endblock %}
