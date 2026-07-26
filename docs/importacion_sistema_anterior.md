@@ -84,3 +84,26 @@ No se mezcla con:
 - facturacion actual
 - cuenta corriente actual
 - liquidacion actual
+
+## Clasificacion probable de historicos
+
+La importacion historica ahora guarda metadatos auxiliares para analisis:
+
+- `usuario_carga`
+- `tipo_probable`
+- `motivo_clasificacion`
+- `vehiculo_chofer`
+
+Esta clasificacion:
+- no borra registros
+- no oculta informacion historica
+- no modifica modelos operativos
+- no define una verdad contable final
+
+Sirve para filtrar mejor:
+- posibles fletes/utilitarios
+- autos/remises
+- registros desconocidos
+
+La regla principal se apoya en chofer y vehiculo.
+El usuario de carga, como `DANIELA` o `GASTON`, queda disponible como filtro auxiliar pero no clasifica por si solo.

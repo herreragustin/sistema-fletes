@@ -25,6 +25,24 @@ OPTIONAL_RESERVA_FILES = {
     "reservas": ["RESVIAK.DBF", "RESBAK.DBF"],
 }
 
+TIPO_PROBABLE_CHOICES = {
+    "flete_utilitario": "Flete-utilitario",
+    "auto_remis": "Auto-remis",
+    "desconocido": "Desconocido",
+}
+
+UTILITARIO_KEYWORDS = (
+    "FIORINO", "KANGOO", "KANGO", "PARTNER", "EXPRESS", "SPRINTER", "IVECO",
+    "CARGO", "BENZ", "MERCEDES", "M BENZ", "M. BENZ", "AGRALE", "CAMION",
+    "CAMIÓN", "DUCATO", "MASTER", "BERLINGO", "BOXER", "DAILY", "TRAFIC", "FURGON",
+    "FURGÓN", "UTILITARIO", "608", "710", "915", "1215",
+)
+
+AUTO_REMIS_KEYWORDS = (
+    "RENAULT 21", "RENAULT-21", "RENAULT 19", "RENAULT-19", "SIENA",
+    "ESCORT", "CORSA", "VOYAGE", "SEDAN", "AUTO", "REMIS",
+)
+
 FIELD_ALIASES = {
     "codigo": ("CODIGO", "COD", "ID", "NRO", "NUMERO", "CLIENTE", "CHOFER", "VIAJE", "VIAJ", "MOVIL", "RESERVA"),
     "nombre": ("NAME", "NOMBRE", "RAZON", "RAZONSOC", "RAZON_SOC", "APELLIDO", "APELL", "NOMAPE", "DESCRIP"),
@@ -64,6 +82,7 @@ class SistemaAnteriorImporter:
         self.encoding = encoding
         self.summaries = {}
         self._used_codes = {}
+        self._choferes_payload_by_code = {}
 
     def validate(self):
         if not self.base_path.exists() or not self.base_path.is_dir():
@@ -122,9 +141,12 @@ class SistemaAnteriorImporter:
     def _parse_all(self, paths):
         self.summaries = {}
         self._used_codes = defaultdict(set)
+        clientes = self._parse_clientes(paths["clientes"])
+        choferes = self._parse_choferes(paths["choferes"])
+        self._choferes_payload_by_code = {row["codigo_legacy"]: row for row in choferes}
         payload = {
-            "clientes": self._parse_clientes(paths["clientes"]),
-            "choferes": self._parse_choferes(paths["choferes"]),
+            "clientes": clientes,
+            "choferes": choferes,
             "viajes": self._parse_viajes(paths["viajes"]),
             "reservas": self._parse_reservas(paths["reservas"]),
         }
@@ -326,6 +348,12 @@ class SistemaAnteriorImporter:
                 codigo_base = self._text(record, "codigo", "MOVIL") or f"{path.name}:{index}"
                 codigo = self._unique_codigo("choferes", codigo_base, path.name, index)
                 nombre = self._build_chofer_nombre(record)
+                descripcion_vehiculo = self._build_descripcion_vehiculo(record)
+                patente = self._text(record, "patente", "NROPAT")
+                tipo_probable, motivo_clasificacion = clasificar_tipo_probable(
+                    texto_vehiculo=descripcion_vehiculo,
+                    texto_observaciones=self._text(record, "observaciones", "OBSERV", "OBSERVAC"),
+                )
                 rows.append({
                     "codigo_legacy": codigo,
                     "nombre": nombre or f"Chofer legacy {codigo}",
@@ -335,7 +363,12 @@ class SistemaAnteriorImporter:
                     "direccion": self._join_parts(record.get("DIRECCION"), record.get("LOCALIDAD")),
                     "estado": self._normalize_estado_chofer(record.get("ACTIVO")),
                     "vehiculo": self._text(record, "vehiculo", "MARCAUT"),
-                    "patente": self._text(record, "patente", "NROPAT"),
+                    "patente": patente,
+                    "descripcion_vehiculo": descripcion_vehiculo,
+                    "patente_legacy": patente,
+                    "tipo_vehiculo_legacy": self._text(record, "TIPOVEHIC", "TIPOVEHIC"),
+                    "tipo_probable": tipo_probable,
+                    "motivo_clasificacion": motivo_clasificacion,
                     "seguro": self._text(record, "seguro", "COMPANIA"),
                     "observaciones": self._text(record, "observaciones", "OBSERV") or "",
                     "origen_legacy": path.name,
@@ -355,6 +388,12 @@ class SistemaAnteriorImporter:
                 codigo = self._unique_codigo("viajes", codigo_base, path.name, index)
                 cliente_codigo = self._text(record, "cliente_codigo", "TELEF")
                 chofer_codigo = self._text(record, "chofer_codigo", "MOVIL")
+                usuario_carga = self._resolve_usuario_carga_viaje(record)
+                clasificacion = self._clasificacion_desde_chofer_o_registro(
+                    chofer_codigo=chofer_codigo,
+                    record=record,
+                    usuario_carga=usuario_carga,
+                )
                 rows.append({
                     "codigo_legacy": codigo,
                     "cliente_codigo_legacy": cliente_codigo or "",
@@ -367,6 +406,10 @@ class SistemaAnteriorImporter:
                     "destino": self._text(record, "destino", "DESTIORI", "DESTINO"),
                     "importe": self._importe(record),
                     "estado": self._normalize_estado_viaje(record),
+                    "usuario_carga": usuario_carga,
+                    "tipo_probable": clasificacion["tipo_probable"],
+                    "motivo_clasificacion": clasificacion["motivo_clasificacion"],
+                    "vehiculo_chofer": clasificacion["vehiculo_chofer"],
                     "observaciones": self._build_observaciones(record),
                     "origen_legacy": path.name,
                     "datos_legacy": self._serialize_record(record),
@@ -386,6 +429,12 @@ class SistemaAnteriorImporter:
                     codigo = self._unique_codigo("reservas", f"{path.stem}:{codigo_base}", path.name, index)
                     cliente_codigo = self._text(record, "cliente_codigo", "TELEF", "CLIENTE")
                     chofer_codigo = self._text(record, "chofer_codigo", "MOVIL", "CHOFER")
+                    usuario_carga = self._resolve_usuario_carga_reserva(record)
+                    clasificacion = self._clasificacion_desde_chofer_o_registro(
+                        chofer_codigo=chofer_codigo,
+                        record=record,
+                        usuario_carga=usuario_carga,
+                    )
                     rows.append({
                         "codigo_legacy": codigo,
                         "cliente_codigo_legacy": cliente_codigo or "",
@@ -398,6 +447,10 @@ class SistemaAnteriorImporter:
                         "destino": self._text(record, "destino", "DESTIORI", "DESTINO"),
                         "importe": self._importe(record),
                         "estado": self._normalize_estado_reserva(record),
+                        "usuario_carga": usuario_carga,
+                        "tipo_probable": clasificacion["tipo_probable"],
+                        "motivo_clasificacion": clasificacion["motivo_clasificacion"],
+                        "vehiculo_chofer": clasificacion["vehiculo_chofer"],
                         "observaciones": self._build_observaciones(record),
                         "origen_legacy": path.name,
                         "datos_legacy": self._serialize_record(record),
@@ -505,6 +558,56 @@ class SistemaAnteriorImporter:
                 ]
 
         return " ".join(cleaned_tokens).strip()
+
+    def _build_descripcion_vehiculo(self, record):
+        return self._join_parts(
+            record.get("MARCAUT"),
+            record.get("REFEREN"),
+            record.get("TIPOVEHIC"),
+            record.get("OBSERVAC"),
+        )
+
+    def _resolve_usuario_carga_viaje(self, record):
+        return self._first_text(record, "USU", "MODIFIPOR", "RECIBIO", "DESPACHO", "MODIFICO", "RESERVO", "ANULO")
+
+    def _resolve_usuario_carga_reserva(self, record):
+        return self._first_text(record, "RESERVO", "USU", "MODIFIPOR", "RECIBIO", "DESPACHO", "MODIFICO", "ANULO")
+
+    def _first_text(self, record, *field_names):
+        for field_name in field_names:
+            value = self._value_as_text(record.get(field_name))
+            if value:
+                return value
+        return ""
+
+    def _clasificacion_desde_chofer_o_registro(self, chofer_codigo, record, usuario_carga=""):
+        chofer = self._choferes_payload_by_code.get(chofer_codigo or "")
+        if chofer:
+            motivo = chofer.get("motivo_clasificacion", "")
+            if motivo:
+                motivo = f"{motivo} (chofer {chofer.get('codigo_legacy')})"
+            return {
+                "tipo_probable": chofer.get("tipo_probable", "desconocido"),
+                "motivo_clasificacion": motivo,
+                "vehiculo_chofer": chofer.get("descripcion_vehiculo") or chofer.get("vehiculo", ""),
+            }
+
+        texto_vehiculo = self._join_parts(
+            record.get("TIPOVEHIC"),
+            record.get("MOVIL"),
+            record.get("REFEREN"),
+        )
+        texto_observaciones = self._join_parts(record.get("OBSERV"), record.get("OBSERVAC"))
+        tipo_probable, motivo_clasificacion = clasificar_tipo_probable(
+            texto_vehiculo=texto_vehiculo,
+            texto_observaciones=texto_observaciones,
+            usuario=usuario_carga,
+        )
+        return {
+            "tipo_probable": tipo_probable,
+            "motivo_clasificacion": motivo_clasificacion,
+            "vehiculo_chofer": self._value_as_text(texto_vehiculo),
+        }
 
     def _normalize_compact_token(self, value):
         text = self._value_as_text(value).upper()
@@ -617,3 +720,26 @@ class SistemaAnteriorImporter:
             else:
                 serialized[key] = value
         return serialized
+
+
+def clasificar_tipo_probable(texto_vehiculo="", texto_observaciones="", usuario=None):
+    fuentes = []
+    if texto_vehiculo:
+        fuentes.append(("Vehiculo", str(texto_vehiculo)))
+    if texto_observaciones:
+        fuentes.append(("Observacion", str(texto_observaciones)))
+
+    for origen, texto in fuentes:
+        texto_mayus = texto.upper()
+        for keyword in UTILITARIO_KEYWORDS:
+            if keyword in texto_mayus:
+                return "flete_utilitario", f"{origen} contiene {keyword}"
+        for keyword in AUTO_REMIS_KEYWORDS:
+            if keyword in texto_mayus:
+                return "auto_remis", f"{origen} contiene {keyword}"
+
+    usuario_texto = (usuario or "").strip().upper()
+    if usuario_texto in {"DANIELA", "GASTON"}:
+        return "desconocido", "Usuario de carga relevante, pero sin vehiculo suficiente para clasificar"
+
+    return "desconocido", "Sin datos suficientes para clasificar"

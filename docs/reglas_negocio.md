@@ -177,5 +177,15 @@ La importacion historica:
 - reutiliza DBF del sistema anterior
 - aplica fallback de aliases para tomar el primer valor util por campo
 - recupera origen y destino desde campos alternativos como `DESDE` y `DESTINO` cuando `DESDEORI` o `DESTIORI` vienen vacios
+- guarda `usuario_carga` usando campos historicos como `USU`, `RESERVO`, `RECIBIO`, `DESPACHO` o `MODIFIPOR`
+- clasifica cada chofer, viaje y reserva en:
+  - `flete_utilitario`
+  - `auto_remis`
+  - `desconocido`
+- guarda `motivo_clasificacion` para explicar por que un registro entro en cada grupo
+- usa principalmente datos de chofer y vehiculo para clasificar
+- deja `DANIELA` y `GASTON` como filtro auxiliar de usuario, pero no los usa por si solos para decidir que algo es flete
+
+La clasificacion historica es probable, no definitiva.
 
 La seccion historica es exclusivamente de consulta.

@@ -26,6 +26,8 @@ backups/
 *.bak
 *.swp
 *.swo
+runserver.out
+runserver_lan.out
 
 # IDE / editor
 .vscode/

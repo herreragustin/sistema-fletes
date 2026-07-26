@@ -19,6 +19,15 @@
             <option value="inactivo" {% if filtros.estado == "inactivo" %}selected{% endif %}>Inactivo</option>
         </select>
     </div>
+    <div class="filtros-campo">
+        <label>Tipo probable</label>
+        <select name="tipo_probable">
+            <option value="">Todos</option>
+            {% for value, label in tipos_probables %}
+                <option value="{{ value }}" {% if filtros.tipo_probable == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+    </div>
     <div class="filtros-acciones">
         <button type="submit">Filtrar</button>
         <a href="{% url 'importadores:lista_choferes_historicos' %}" class="btn-secundario">Limpiar</a>
@@ -36,6 +45,8 @@
             <th>Telefono</th>
             <th>Patente</th>
             <th>Vehiculo</th>
+            <th>Tipo probable</th>
+            <th>Motivo</th>
             <th>Estado</th>
             <th>Detalle</th>
         </tr>
@@ -46,8 +57,10 @@
             <td>{{ chofer.codigo_legacy }}</td>
             <td>{{ chofer.nombre }}</td>
             <td>{{ chofer.telefono|default:"-" }}</td>
-            <td>{{ chofer.patente|default:"-" }}</td>
-            <td>{{ chofer.vehiculo|default:"-" }}</td>
+            <td>{{ chofer.patente_legacy|default:chofer.patente|default:"-" }}</td>
+            <td>{{ chofer.descripcion_vehiculo|default:chofer.vehiculo|default:"-" }}</td>
+            <td><span class="estado {{ chofer.tipo_probable }}">{{ chofer.get_tipo_probable_display }}</span></td>
+            <td>{{ chofer.motivo_clasificacion|default:"-" }}</td>
             <td><span class="estado {{ chofer.estado|default:'sin_estado' }}">{{ chofer.estado|default:"-"|title }}</span></td>
             <td><a href="{% url 'importadores:detalle_chofer_historico' chofer.id %}">Ver</a></td>
         </tr>

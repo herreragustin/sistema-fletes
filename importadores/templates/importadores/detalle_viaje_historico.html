@@ -15,11 +15,15 @@
     <div><span>Hora</span><strong>{{ viaje.hora|time:"H:i"|default:"-" }}</strong></div>
     <div><span>Importe</span><strong>${{ viaje.importe|miles_punto }}</strong></div>
     <div><span>Estado</span><strong>{{ viaje.get_estado_display }}</strong></div>
+    <div><span>Tipo probable</span><strong>{{ viaje.get_tipo_probable_display }}</strong></div>
 </div>
 
 <div class="sin-datos">
     <p><strong>Cliente:</strong> {{ viaje.cliente.nombre|default:viaje.cliente_codigo_legacy|default:"Sin relacion" }}</p>
     <p><strong>Chofer:</strong> {{ viaje.chofer.nombre|default:viaje.chofer_codigo_legacy|default:"Sin relacion" }}</p>
+    <p><strong>Vehiculo chofer:</strong> {{ viaje.vehiculo_chofer|default:"-" }}</p>
+    <p><strong>Usuario carga:</strong> {{ viaje.usuario_carga|default:"-" }}</p>
+    <p><strong>Motivo clasificacion:</strong> {{ viaje.motivo_clasificacion|default:"-" }}</p>
     <p><strong>Origen:</strong> {{ viaje.origen|default:"-" }}</p>
     <p><strong>Destino:</strong> {{ viaje.destino|default:"-" }}</p>
     <p><strong>Observaciones:</strong> {{ viaje.observaciones|default:"-" }}</p>

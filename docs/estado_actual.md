@@ -104,6 +104,9 @@ Base tecnica actual:
 - los datos historicos no se mezclan con clientes, choferes ni fletes operativos actuales
 - la importacion usa parser con fallback de aliases para recuperar correctamente origen y destino
 - el mapeo de choferes historicos fue corregido inspeccionando `CHOFERES.DBF` para usar apellido real desde `APELL` y nombre desde `NOMBRE`
+- la importacion historica ahora guarda `usuario_carga`, `tipo_probable`, `motivo_clasificacion` y `vehiculo_chofer` para ayudar a distinguir posibles fletes
+- la clasificacion historica es probable y se basa principalmente en chofer/vehiculo, no en una decision operativa definitiva
+- la interfaz historica agrega filtros por usuario de carga, tipo probable, chofer y la vista `solo posibles fletes`
 
 ## Partes mas consolidadas
 

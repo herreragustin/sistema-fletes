@@ -21,12 +21,42 @@
         </select>
     </div>
     <div class="filtros-campo">
+        <label>Usuario carga</label>
+        <select name="usuario_carga">
+            {% for value, label in filtros_usuario %}
+                <option value="{{ value }}" {% if filtros.usuario_carga == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="filtros-campo">
+        <label>Tipo probable</label>
+        <select name="tipo_probable">
+            <option value="">Todos</option>
+            {% for value, label in tipos_probables %}
+                <option value="{{ value }}" {% if filtros.tipo_probable == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="filtros-campo">
+        <label>Chofer</label>
+        <select name="chofer">
+            <option value="">Todos</option>
+            {% for chofer_item in choferes %}
+                <option value="{{ chofer_item.id }}" {% if filtros.chofer == chofer_item.id|stringformat:"s" %}selected{% endif %}>{{ chofer_item.nombre }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="filtros-campo">
         <label>Desde</label>
         <input type="date" name="fecha_desde" value="{{ filtros.fecha_desde }}">
     </div>
     <div class="filtros-campo">
         <label>Hasta</label>
         <input type="date" name="fecha_hasta" value="{{ filtros.fecha_hasta }}">
+    </div>
+    <div class="filtros-campo">
+        <label>Solo posibles fletes</label>
+        <input type="checkbox" name="solo_posibles_fletes" value="1" {% if filtros.solo_posibles_fletes %}checked{% endif %}>
     </div>
     <div class="filtros-acciones">
         <button type="submit">Filtrar</button>
@@ -46,10 +76,12 @@
             <th>Hora</th>
             <th>Cliente</th>
             <th>Chofer</th>
+            <th>Vehiculo</th>
+            <th>Usuario carga</th>
             <th>Origen</th>
             <th>Destino</th>
             <th>Importe</th>
-            <th>Estado</th>
+            <th>Tipo probable</th>
             <th>Detalle</th>
         </tr>
     </thead>
@@ -61,10 +93,12 @@
             <td>{{ reserva.hora|time:"H:i"|default:"-" }}</td>
             <td>{{ reserva.cliente.nombre|default:reserva.cliente_codigo_legacy|default:"Sin relacion" }}</td>
             <td>{{ reserva.chofer.nombre|default:reserva.chofer_codigo_legacy|default:"Sin relacion" }}</td>
+            <td>{{ reserva.vehiculo_chofer|default:"-" }}</td>
+            <td>{{ reserva.usuario_carga|default:"-" }}</td>
             <td>{{ reserva.origen|default:"-" }}</td>
             <td>{{ reserva.destino|default:"-" }}</td>
             <td>${{ reserva.importe|miles_punto }}</td>
-            <td><span class="estado {{ reserva.estado }}">{{ reserva.get_estado_display }}</span></td>
+            <td><span class="estado {{ reserva.tipo_probable }}">{{ reserva.get_tipo_probable_display }}</span></td>
             <td><a href="{% url 'importadores:detalle_reserva_historica' reserva.id %}">Ver</a></td>
         </tr>
         {% endfor %}

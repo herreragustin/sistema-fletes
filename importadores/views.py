@@ -61,6 +61,7 @@ def detalle_cliente_historico(request, pk):
 def lista_choferes_historicos(request):
     q = request.GET.get("q", "").strip()
     estado = request.GET.get("estado", "").strip()
+    tipo_probable = request.GET.get("tipo_probable", "").strip()
     choferes = ChoferHistorico.objects.all()
 
     if q:
@@ -68,16 +69,20 @@ def lista_choferes_historicos(request):
             Q(nombre__icontains=q)
             | Q(telefono__icontains=q)
             | Q(patente__icontains=q)
+            | Q(descripcion_vehiculo__icontains=q)
             | Q(codigo_legacy__icontains=q)
         )
     if estado:
         choferes = choferes.filter(estado__iexact=estado)
+    if tipo_probable:
+        choferes = choferes.filter(tipo_probable=tipo_probable)
 
     page_obj = _paginate(request, choferes.order_by("nombre", "codigo_legacy"), 30)
     return render(request, "importadores/lista_choferes_historicos.html", {
         "page_obj": page_obj,
         "total": choferes.count(),
-        "filtros": {"q": q, "estado": estado},
+        "tipos_probables": ChoferHistorico.TIPO_PROBABLE,
+        "filtros": {"q": q, "estado": estado, "tipo_probable": tipo_probable},
     })
 
 
@@ -95,6 +100,10 @@ def detalle_chofer_historico(request, pk):
 def lista_viajes_historicos(request):
     q = request.GET.get("q", "").strip()
     estado = request.GET.get("estado", "").strip()
+    usuario_carga = request.GET.get("usuario_carga", "").strip()
+    tipo_probable = request.GET.get("tipo_probable", "").strip()
+    solo_posibles_fletes = request.GET.get("solo_posibles_fletes", "").strip()
+    chofer = request.GET.get("chofer", "").strip()
     fecha_desde = request.GET.get("fecha_desde", "").strip()
     fecha_hasta = request.GET.get("fecha_hasta", "").strip()
     viajes = ViajeHistorico.objects.select_related("cliente", "chofer").all()
@@ -111,6 +120,20 @@ def lista_viajes_historicos(request):
         )
     if estado:
         viajes = viajes.filter(estado=estado)
+    if usuario_carga == "daniela":
+        viajes = viajes.filter(usuario_carga__iexact="DANIELA")
+    elif usuario_carga == "gaston":
+        viajes = viajes.filter(usuario_carga__iexact="GASTON")
+    elif usuario_carga == "otros":
+        viajes = viajes.exclude(usuario_carga="").exclude(usuario_carga__isnull=True).exclude(usuario_carga__iexact="DANIELA").exclude(usuario_carga__iexact="GASTON")
+    elif usuario_carga == "sin_dato":
+        viajes = viajes.filter(Q(usuario_carga="") | Q(usuario_carga__isnull=True))
+    if tipo_probable:
+        viajes = viajes.filter(tipo_probable=tipo_probable)
+    if solo_posibles_fletes:
+        viajes = viajes.filter(tipo_probable="flete_utilitario")
+    if chofer:
+        viajes = viajes.filter(chofer_id=chofer)
     if fecha_desde:
         viajes = viajes.filter(fecha__gte=fecha_desde)
     if fecha_hasta:
@@ -121,7 +144,19 @@ def lista_viajes_historicos(request):
         "page_obj": page_obj,
         "total": viajes.count(),
         "estados": ViajeHistorico.ESTADO_VIAJE,
-        "filtros": {"q": q, "estado": estado, "fecha_desde": fecha_desde, "fecha_hasta": fecha_hasta},
+        "tipos_probables": ViajeHistorico.TIPO_PROBABLE,
+        "filtros_usuario": _filtros_usuario(),
+        "choferes": ChoferHistorico.objects.order_by("nombre", "codigo_legacy"),
+        "filtros": {
+            "q": q,
+            "estado": estado,
+            "usuario_carga": usuario_carga,
+            "tipo_probable": tipo_probable,
+            "solo_posibles_fletes": solo_posibles_fletes,
+            "chofer": chofer,
+            "fecha_desde": fecha_desde,
+            "fecha_hasta": fecha_hasta,
+        },
     })
 
 
@@ -133,6 +168,10 @@ def detalle_viaje_historico(request, pk):
 def lista_reservas_historicas(request):
     q = request.GET.get("q", "").strip()
     estado = request.GET.get("estado", "").strip()
+    usuario_carga = request.GET.get("usuario_carga", "").strip()
+    tipo_probable = request.GET.get("tipo_probable", "").strip()
+    solo_posibles_fletes = request.GET.get("solo_posibles_fletes", "").strip()
+    chofer = request.GET.get("chofer", "").strip()
     fecha_desde = request.GET.get("fecha_desde", "").strip()
     fecha_hasta = request.GET.get("fecha_hasta", "").strip()
     reservas = ReservaHistorica.objects.select_related("cliente", "chofer").all()
@@ -149,6 +188,20 @@ def lista_reservas_historicas(request):
         )
     if estado:
         reservas = reservas.filter(estado=estado)
+    if usuario_carga == "daniela":
+        reservas = reservas.filter(usuario_carga__iexact="DANIELA")
+    elif usuario_carga == "gaston":
+        reservas = reservas.filter(usuario_carga__iexact="GASTON")
+    elif usuario_carga == "otros":
+        reservas = reservas.exclude(usuario_carga="").exclude(usuario_carga__isnull=True).exclude(usuario_carga__iexact="DANIELA").exclude(usuario_carga__iexact="GASTON")
+    elif usuario_carga == "sin_dato":
+        reservas = reservas.filter(Q(usuario_carga="") | Q(usuario_carga__isnull=True))
+    if tipo_probable:
+        reservas = reservas.filter(tipo_probable=tipo_probable)
+    if solo_posibles_fletes:
+        reservas = reservas.filter(tipo_probable="flete_utilitario")
+    if chofer:
+        reservas = reservas.filter(chofer_id=chofer)
     if fecha_desde:
         reservas = reservas.filter(fecha__gte=fecha_desde)
     if fecha_hasta:
@@ -159,7 +212,19 @@ def lista_reservas_historicas(request):
         "page_obj": page_obj,
         "total": reservas.count(),
         "estados": ReservaHistorica.ESTADO_RESERVA,
-        "filtros": {"q": q, "estado": estado, "fecha_desde": fecha_desde, "fecha_hasta": fecha_hasta},
+        "tipos_probables": ReservaHistorica.TIPO_PROBABLE,
+        "filtros_usuario": _filtros_usuario(),
+        "choferes": ChoferHistorico.objects.order_by("nombre", "codigo_legacy"),
+        "filtros": {
+            "q": q,
+            "estado": estado,
+            "usuario_carga": usuario_carga,
+            "tipo_probable": tipo_probable,
+            "solo_posibles_fletes": solo_posibles_fletes,
+            "chofer": chofer,
+            "fecha_desde": fecha_desde,
+            "fecha_hasta": fecha_hasta,
+        },
     })
 
 
@@ -258,3 +323,13 @@ def to_int(value, default):
 def _paginate(request, queryset, per_page):
     paginator = Paginator(queryset, per_page)
     return paginator.get_page(request.GET.get("pagina"))
+
+
+def _filtros_usuario():
+    return [
+        ("", "Todos"),
+        ("daniela", "DANIELA"),
+        ("gaston", "GASTON"),
+        ("otros", "Otros"),
+        ("sin_dato", "Sin dato"),
+    ]

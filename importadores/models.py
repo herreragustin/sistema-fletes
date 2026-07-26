@@ -28,6 +28,12 @@ class ClienteHistorico(LegacyBaseModel):
 
 
 class ChoferHistorico(LegacyBaseModel):
+    TIPO_PROBABLE = [
+        ("flete_utilitario", "Flete-utilitario"),
+        ("auto_remis", "Auto-remis"),
+        ("desconocido", "Desconocido"),
+    ]
+
     nombre = models.CharField(max_length=150)
     telefono = models.CharField(max_length=40, blank=True)
     dni = models.CharField(max_length=40, blank=True)
@@ -36,6 +42,11 @@ class ChoferHistorico(LegacyBaseModel):
     estado = models.CharField(max_length=30, blank=True)
     vehiculo = models.CharField(max_length=120, blank=True)
     patente = models.CharField(max_length=40, blank=True)
+    descripcion_vehiculo = models.CharField(max_length=255, blank=True)
+    patente_legacy = models.CharField(max_length=40, blank=True)
+    tipo_vehiculo_legacy = models.CharField(max_length=120, blank=True)
+    tipo_probable = models.CharField(max_length=20, choices=TIPO_PROBABLE, default="desconocido")
+    motivo_clasificacion = models.CharField(max_length=255, blank=True)
     seguro = models.CharField(max_length=120, blank=True)
     observaciones = models.TextField(blank=True)
 
@@ -49,6 +60,7 @@ class ChoferHistorico(LegacyBaseModel):
 
 
 class ViajeHistorico(LegacyBaseModel):
+    TIPO_PROBABLE = ChoferHistorico.TIPO_PROBABLE
     ESTADO_VIAJE = [
         ("reserva", "Reserva"),
         ("pendiente", "Pendiente"),
@@ -80,6 +92,10 @@ class ViajeHistorico(LegacyBaseModel):
     destino = models.CharField(max_length=255, blank=True)
     importe = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     estado = models.CharField(max_length=20, choices=ESTADO_VIAJE, default="sin_estado")
+    usuario_carga = models.CharField(max_length=80, blank=True)
+    tipo_probable = models.CharField(max_length=20, choices=TIPO_PROBABLE, default="desconocido")
+    motivo_clasificacion = models.CharField(max_length=255, blank=True)
+    vehiculo_chofer = models.CharField(max_length=255, blank=True)
     observaciones = models.TextField(blank=True)
 
     class Meta:
@@ -97,6 +113,7 @@ class ViajeHistorico(LegacyBaseModel):
 
 
 class ReservaHistorica(LegacyBaseModel):
+    TIPO_PROBABLE = ChoferHistorico.TIPO_PROBABLE
     ESTADO_RESERVA = [
         ("reserva", "Reserva"),
         ("pendiente", "Pendiente"),
@@ -128,6 +145,10 @@ class ReservaHistorica(LegacyBaseModel):
     destino = models.CharField(max_length=255, blank=True)
     importe = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     estado = models.CharField(max_length=20, choices=ESTADO_RESERVA, default="reserva")
+    usuario_carga = models.CharField(max_length=80, blank=True)
+    tipo_probable = models.CharField(max_length=20, choices=TIPO_PROBABLE, default="desconocido")
+    motivo_clasificacion = models.CharField(max_length=255, blank=True)
+    vehiculo_chofer = models.CharField(max_length=255, blank=True)
     observaciones = models.TextField(blank=True)
 
     class Meta:

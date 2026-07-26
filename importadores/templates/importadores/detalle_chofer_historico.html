@@ -13,11 +13,14 @@
 <div class="resumen-total">
     <div><span>Codigo legacy</span><strong>{{ chofer.codigo_legacy }}</strong></div>
     <div><span>Telefono</span><strong>{{ chofer.telefono|default:"-" }}</strong></div>
-    <div><span>Patente</span><strong>{{ chofer.patente|default:"-" }}</strong></div>
+    <div><span>Patente</span><strong>{{ chofer.patente_legacy|default:chofer.patente|default:"-" }}</strong></div>
+    <div><span>Tipo probable</span><strong>{{ chofer.get_tipo_probable_display }}</strong></div>
 </div>
 
 <div class="sin-datos">
-    <p><strong>Vehiculo:</strong> {{ chofer.vehiculo|default:"-" }}</p>
+    <p><strong>Vehiculo:</strong> {{ chofer.descripcion_vehiculo|default:chofer.vehiculo|default:"-" }}</p>
+    <p><strong>Tipo vehiculo legacy:</strong> {{ chofer.tipo_vehiculo_legacy|default:"-" }}</p>
+    <p><strong>Motivo clasificacion:</strong> {{ chofer.motivo_clasificacion|default:"-" }}</p>
     <p><strong>DNI:</strong> {{ chofer.dni|default:"-" }}</p>
     <p><strong>Registro:</strong> {{ chofer.registro|default:"-" }}</p>
     <p><strong>Direccion:</strong> {{ chofer.direccion|default:"-" }}</p>
