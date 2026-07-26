@@ -1,5 +1,5 @@
 from django.core.paginator import Paginator
-from django.db.models import Q
+from django.db.models import Q, Sum
 from django.shortcuts import get_object_or_404, render
 
 from .dbf import DBFError, DBFTable
@@ -139,10 +139,12 @@ def lista_viajes_historicos(request):
     if fecha_hasta:
         viajes = viajes.filter(fecha__lte=fecha_hasta)
 
+    resumen = _build_resumen_historico(viajes)
     page_obj = _paginate(request, viajes.order_by("-fecha", "-hora", "-codigo_legacy"), 40)
     return render(request, "importadores/lista_viajes_historicos.html", {
         "page_obj": page_obj,
         "total": viajes.count(),
+        "resumen": resumen,
         "estados": ViajeHistorico.ESTADO_VIAJE,
         "tipos_probables": ViajeHistorico.TIPO_PROBABLE,
         "filtros_usuario": _filtros_usuario(),
@@ -207,10 +209,12 @@ def lista_reservas_historicas(request):
     if fecha_hasta:
         reservas = reservas.filter(fecha__lte=fecha_hasta)
 
+    resumen = _build_resumen_historico(reservas)
     page_obj = _paginate(request, reservas.order_by("-fecha", "-hora", "-codigo_legacy"), 40)
     return render(request, "importadores/lista_reservas_historicas.html", {
         "page_obj": page_obj,
         "total": reservas.count(),
+        "resumen": resumen,
         "estados": ReservaHistorica.ESTADO_RESERVA,
         "tipos_probables": ReservaHistorica.TIPO_PROBABLE,
         "filtros_usuario": _filtros_usuario(),
@@ -333,3 +337,19 @@ def _filtros_usuario():
         ("otros", "Otros"),
         ("sin_dato", "Sin dato"),
     ]
+
+
+def _build_resumen_historico(queryset):
+    total = queryset.count()
+    usuarios_base = queryset.exclude(usuario_carga="").exclude(usuario_carga__isnull=True)
+    return {
+        "total": total,
+        "flete_utilitario": queryset.filter(tipo_probable="flete_utilitario").count(),
+        "auto_remis": queryset.filter(tipo_probable="auto_remis").count(),
+        "desconocido": queryset.filter(tipo_probable="desconocido").count(),
+        "daniela": queryset.filter(usuario_carga__iexact="DANIELA").count(),
+        "gaston": queryset.filter(usuario_carga__iexact="GASTON").count(),
+        "otros_usuarios": usuarios_base.exclude(usuario_carga__iexact="DANIELA").exclude(usuario_carga__iexact="GASTON").count(),
+        "sin_usuario": queryset.filter(Q(usuario_carga="") | Q(usuario_carga__isnull=True)).count(),
+        "importe_total": queryset.aggregate(total_importe=Sum("importe"))["total_importe"] or 0,
+    }

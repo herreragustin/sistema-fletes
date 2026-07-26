@@ -107,6 +107,7 @@ Base tecnica actual:
 - la importacion historica ahora guarda `usuario_carga`, `tipo_probable`, `motivo_clasificacion` y `vehiculo_chofer` para ayudar a distinguir posibles fletes
 - la clasificacion historica es probable y se basa principalmente en chofer/vehiculo, no en una decision operativa definitiva
 - la interfaz historica agrega filtros por usuario de carga, tipo probable, chofer y la vista `solo posibles fletes`
+- las listas historicas de viajes y reservas muestran un resumen de totales e importes que respeta los filtros aplicados
 
 ## Partes mas consolidadas
 

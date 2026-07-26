@@ -66,6 +66,18 @@
 
 <p class="muted">Registros encontrados: {{ total }}</p>
 
+<div class="resumen-total">
+    <div><span>Total</span><strong>{{ resumen.total }}</strong></div>
+    <div><span>Flete/utilitario</span><strong>{{ resumen.flete_utilitario }}</strong></div>
+    <div><span>Auto/remis</span><strong>{{ resumen.auto_remis }}</strong></div>
+    <div><span>Desconocido</span><strong>{{ resumen.desconocido }}</strong></div>
+    <div><span>Daniela</span><strong>{{ resumen.daniela }}</strong></div>
+    <div><span>Gaston</span><strong>{{ resumen.gaston }}</strong></div>
+    <div><span>Otros usuarios</span><strong>{{ resumen.otros_usuarios }}</strong></div>
+    <div><span>Sin usuario</span><strong>{{ resumen.sin_usuario }}</strong></div>
+    <div><span>Importe total</span><strong>${{ resumen.importe_total|miles_punto }}</strong></div>
+</div>
+
 {% if page_obj.object_list %}
 <div class="tabla-scroll">
 <table>
